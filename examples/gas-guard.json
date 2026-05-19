@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "templateId": "gas-guard",
+  "name": "ETH swap gas guard",
+  "audited": false,
+  "network": {
+    "chainId": 1,
+    "lopAddress": "0x111111125421ca6dc452d289314280a0f8842a65"
+  },
+  "order": {
+    "maker": "0x2222222222222222222222222222222222222222",
+    "makerAsset": "0x3333333333333333333333333333333333333333",
+    "takerAsset": "0x4444444444444444444444444444444444444444",
+    "makingAmount": "1000000000000000000",
+    "takingAmount": "2000000000000000000",
+    "allowPartialFills": false,
+    "allowMultipleFills": false
+  },
+  "block": {
+    "type": "gas-guard",
+    "maxGwei": 30
+  }
+}

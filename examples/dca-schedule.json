@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "templateId": "dca-schedule",
+  "name": "Weekly DCA 4 tranches",
+  "audited": false,
+  "network": {
+    "chainId": 1,
+    "lopAddress": "0x111111125421ca6dc452d289314280a0f8842a65"
+  },
+  "order": {
+    "maker": "0x2222222222222222222222222222222222222222",
+    "makerAsset": "0x3333333333333333333333333333333333333333",
+    "takerAsset": "0x4444444444444444444444444444444444444444",
+    "makingAmount": "4000000000000000000",
+    "takingAmount": "8000000000000000000",
+    "allowPartialFills": false
+  },
+  "block": {
+    "type": "dca-schedule",
+    "tranches": 4,
+    "amountPerTranche": "1000000000000000000",
+    "intervalSeconds": 604800,
+    "seriesId": 42
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "templateId": "twap-slice",
+  "name": "WETH TWAP 10 slices",
+  "audited": false,
+  "network": {
+    "chainId": 1,
+    "lopAddress": "0x111111125421ca6dc452d289314280a0f8842a65"
+  },
+  "order": {
+    "maker": "0x2222222222222222222222222222222222222222",
+    "makerAsset": "0x3333333333333333333333333333333333333333",
+    "takerAsset": "0x4444444444444444444444444444444444444444",
+    "makingAmount": "10000000000000000000",
+    "takingAmount": "20000000000000000000",
+    "allowPartialFills": true,
+    "allowMultipleFills": true
+  },
+  "block": {
+    "type": "twap-slice",
+    "totalAmount": "10000000000000000000",
+    "sliceAmount": "1000000000000000000",
+    "intervalSeconds": 3600,
+    "startTime": 0
+  }
+}

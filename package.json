@@ -1,0 +1,23 @@
+{
+  "name": "limit-canvas",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "bun run --filter @limit-canvas/studio dev",
+    "build": "bun run build:packages && bun run --filter @limit-canvas/studio build",
+    "build:packages": "bun run --filter @limit-canvas/hook-dsl build && bun run --filter @limit-canvas/lop-sdk build && bun run --filter @limit-canvas/codegen build",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test:contracts": "cd packages/contracts && forge test -vvv",
+    "test:packages": "bun test packages/hook-dsl packages/lop-sdk packages/codegen",
+    "test": "bun run test:packages && bun run test:contracts",
+    "bench": "bash scripts/bench.sh",
+    "verify-extension": "bun run scripts/verify-extension.ts",
+    "codegen": "bun run packages/codegen/src/cli.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "typescript": "^5.7.3"
+  }
+}

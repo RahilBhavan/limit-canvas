@@ -1,0 +1,123 @@
+{
+  "manifestVersion": "1.0.0",
+  "generatedBy": "limit-canvas",
+  "dslHash": "0xf4db91d9559e0e94ccb6aa45de91f8b569b5520cfddac65d72af98e3e855dc8f",
+  "template": {
+    "id": "stop-loss",
+    "version": "1.0.0",
+    "maturity": "audit-ready"
+  },
+  "compiler": {
+    "solidity": "0.8.23"
+  },
+  "lop": {
+    "version": "4.3.2",
+    "chainId": 1,
+    "address": "0x111111125421ca6dc452d289314280a0f8842a65"
+  },
+  "generatedFiles": [
+    "src/generated/stop-loss/Strategy.sol",
+    "src/generated/stop-loss/Strategy.t.sol",
+    "script/generated/DeployStopLossStrategy.s.sol",
+    "extensions.json",
+    "README.generated.md",
+    "manifest.json"
+  ],
+  "graph": {
+    "version": "1.0.0",
+    "nodes": [
+      {
+        "id": "order",
+        "kind": "order",
+        "label": "Maker intent",
+        "params": {}
+      },
+      {
+        "id": "stop-loss",
+        "kind": "predicate",
+        "templateId": "stop-loss",
+        "label": "stop-loss",
+        "params": {
+          "oracle": "0x5555555555555555555555555555555555555555",
+          "threshold": "75000000000",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "gas-guard-addon",
+        "kind": "predicate",
+        "templateId": "gas-guard",
+        "label": "gas-guard",
+        "params": {
+          "maxGwei": 25
+        }
+      },
+      {
+        "id": "extension",
+        "kind": "extension",
+        "label": "Packed LOP extension",
+        "params": {}
+      },
+      {
+        "id": "proof",
+        "kind": "proof",
+        "label": "Proof gate",
+        "params": {}
+      }
+    ],
+    "edges": [
+      {
+        "id": "order-condition",
+        "source": "order",
+        "target": "stop-loss",
+        "label": "configure"
+      },
+      {
+        "id": "condition-gas",
+        "source": "stop-loss",
+        "target": "gas-guard-addon",
+        "label": "and"
+      },
+      {
+        "id": "gas-extension",
+        "source": "gas-guard-addon",
+        "target": "extension",
+        "label": "pack"
+      },
+      {
+        "id": "extension-proof",
+        "source": "extension",
+        "target": "proof",
+        "label": "verify"
+      }
+    ],
+    "compiledPredicate": {
+      "mode": "and",
+      "rootNodeIds": ["stop-loss", "gas-guard-addon"]
+    }
+  },
+  "compiledPredicateTree": {
+    "mode": "and",
+    "nodes": [
+      {
+        "id": "stop-loss",
+        "templateId": "stop-loss",
+        "predicateCalldata": "0xbf15fcd80000000000000000000000000000000000000000000000000000000000000001..."
+      },
+      {
+        "id": "gas-guard-addon",
+        "templateId": "gas-guard",
+        "predicateCalldata": "0xbf15fcd80000000000000000000000000000000000000000000000000000000000000001..."
+      }
+    ],
+    "root": "0xbfa7514300000000000000000000000000000000000000000000000000000188000000e4000000..."
+  },
+  "extensionHash": "0x2dfb3b229d88e67ee910b5663bb298d8948bcc66",
+  "bytecodeHash": null,
+  "warnings": ["mainnet deploy blocked until audited: true in DSL."],
+  "testCommandResults": {
+    "tests": "not-run",
+    "fuzz": "not-run",
+    "gas": "not-run"
+  }
+}

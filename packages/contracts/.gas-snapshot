@@ -1,0 +1,4 @@
+GasGuardBenchmarkTest:testBenchmark_naive() (gas: 7412)
+GasGuardBenchmarkTest:testBenchmark_optimized() (gas: 7700)
+StopLossBenchmarkTest:testBenchmark_naive() (gas: 13452)
+StopLossBenchmarkTest:testBenchmark_optimized() (gas: 12949)

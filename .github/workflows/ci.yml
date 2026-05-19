@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Verify LOP submodule pinned to 4.3.2
+        working-directory: packages/contracts/lib/limit-order-protocol
+        run: |
+          tag=$(git describe --tags --exact-match HEAD)
+          test "$tag" = "4.3.2"
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Forge build & test
+        working-directory: packages/contracts
+        run: |
+          forge build
+          forge test -vvv
+      - name: Gas snapshot check
+        working-directory: packages/contracts
+        run: |
+          forge snapshot --match-path "test/benchmark/*"
+          forge snapshot --check --match-path "test/benchmark/*"
+
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Build packages
+        run: bun run build:packages
+      - name: Typecheck studio
+        run: bun run --filter @limit-canvas/studio typecheck
+      - name: Test packages
+        run: bun run test:packages
+      - name: Lint
+        run: bun run lint

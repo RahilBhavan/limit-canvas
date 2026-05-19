@@ -81,7 +81,12 @@ limit-canvas/
 **Sprint goal:** Portfolio-grade polish on the gas-safe stop-loss story (visual canvas → manifest → proof).
 **My current focus:** Reviewer-friendliness — README, code tour, in-app onboarding, plain-language strategy review.
 **Active tasks:** Onboarding overlay clarity; `CODE_TOUR.md` surfacing the load-bearing files; README hook + diagram.
-**Blocked on:** P0 items in [`docs/1inch-review.md`](docs/1inch-review.md) — oracle hardening, real bytecode hash, audit-provenance schema, fill-path benchmark.
+**Release-blocker P0 status:**
+- Oracle hardening — done (staleness, decimals, round-completeness, allowlist warning, integration tests)
+- Real bytecode hash — done (committed snapshot from forge, metadata-stripped, manifest + readiness gate)
+- Audit-provenance schema — done (`audit: { auditor, reportUrl, scope, commitHash, date }`, manifest + UI surface)
+- Fill-path benchmark — done (`test/benchmark/StopLossFill.benchmark.t.sol`, CI snapshot check)
+**Remaining for release:** P1 items in [`docs/1inch-review.md`](docs/1inch-review.md) — maker traits as first-class DSL, keeper docs, TWAP/DCA on codegen, zip export, OR/NOT primitives.
 
 ---
 

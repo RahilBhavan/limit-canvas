@@ -15,3 +15,9 @@ export {
   type OrderbookPayloadShape,
 } from "./orderbook.js";
 export { getLopAddress, isKnownLopAddress, LOP_REGISTRY } from "./registry.js";
+export {
+  isKnownOracle,
+  KNOWN_ORACLES,
+  lookupOracle,
+  type OracleMeta,
+} from "./oracle-registry.js";

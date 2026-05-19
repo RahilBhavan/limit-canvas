@@ -36,6 +36,17 @@ export const stopLossBlockSchema = z.object({
   threshold: z.string().regex(/^\d+$/),
   /** Fill when price is above threshold (take-profit style) or below (stop-loss floor) */
   direction: z.enum(["above", "below"]),
+  /**
+   * Maximum seconds since the oracle's last update before the predicate must revert.
+   * Should match (or be slightly longer than) the feed's published heartbeat.
+   */
+  staleAfter: z
+    .number()
+    .int()
+    .positive()
+    .max(7 * 24 * 60 * 60),
+  /** Decimals the threshold was scaled in. Must match `oracle.decimals()` on-chain. */
+  decimals: z.number().int().min(0).max(36),
 });
 
 export const gasGuardBlockSchema = z.object({
@@ -86,12 +97,27 @@ export const strategyGraphSchema = z.object({
     .optional(),
 });
 
+/**
+ * Structured audit provenance. When present, this supersedes the legacy
+ * `audited` boolean and is embedded verbatim in every generated manifest.
+ * A partner reviewing a handoff can verify `commitHash` against the bundle
+ * and follow `reportUrl` to the canonical report.
+ */
+export const auditProvenanceSchema = z.object({
+  auditor: z.string().min(1).max(128),
+  reportUrl: z.string().url(),
+  scope: z.string().min(1).max(512),
+  commitHash: z.string().regex(/^[0-9a-fA-F]{7,64}$/, "Invalid commit hash"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+});
+
 export const strategyDocumentSchema = z
   .object({
     version: z.literal(DSL_VERSION),
     templateId: templateIdSchema,
     name: z.string().min(1).max(128),
     audited: z.boolean().default(false),
+    audit: auditProvenanceSchema.optional(),
     network: networkSchema,
     order: orderSchema,
     block: z.discriminatedUnion("type", [

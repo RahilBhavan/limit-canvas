@@ -1,6 +1,9 @@
-import type { SimulationInput, StrategyAddonState } from "@/lib/strategy-workstation";
-import type { StrategyDocument, TemplateId } from "@limit-canvas/hook-dsl";
 import type { UiMode, WorkflowStepId } from "@/lib/composer-types";
+import type {
+  SimulationInput,
+  StrategyAddonState,
+} from "@/lib/strategy-workstation";
+import type { StrategyDocument, TemplateId } from "@limit-canvas/hook-dsl";
 
 const STORAGE_KEY = "limit-canvas.composer.v1";
 

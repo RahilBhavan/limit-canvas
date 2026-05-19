@@ -1,0 +1,18 @@
+{
+  "stop-loss": {
+    "compiler": "0.8.23",
+    "bytecodeHash": "0x1e7b01eba1c261bbd1fed6190efdd63f6100e3af8eeb9931a2c5e5a019dd9a1b"
+  },
+  "gas-guard": {
+    "compiler": "0.8.23",
+    "bytecodeHash": "0x8aa56de6a3dc4814df14606becd420516f09e1c6e91af200c2bc6ffea358d3aa"
+  },
+  "twap-slice": {
+    "compiler": "0.8.23",
+    "bytecodeHash": "0x511ecf4e8ec6ff4c799993bfd653448ca06f035bbf274750faf4f82321eadb66"
+  },
+  "dca-schedule": {
+    "compiler": "0.8.23",
+    "bytecodeHash": "0x1083204ec943278c3e8db0bc831b51152fdf06b0d78afc858e32ea0b2126807b"
+  }
+}

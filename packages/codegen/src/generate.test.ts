@@ -44,6 +44,8 @@ const gasSafeStopLoss = parseStrategyDocument({
     oracle: "0x5555555555555555555555555555555555555555",
     threshold: "75000000000",
     direction: "below",
+    staleAfter: 3600,
+    decimals: 8,
   },
   graph: {
     version: "1.0.0",

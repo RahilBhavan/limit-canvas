@@ -27,7 +27,9 @@ export function DeployStepPanel({
         <li className={artifactsReady ? "done" : ""}>
           Generate artifact bundle
         </li>
-        <li className={proofGreen ? "done" : ""}>Run checks (tests + fuzz + gas)</li>
+        <li className={proofGreen ? "done" : ""}>
+          Run checks (tests + fuzz + gas)
+        </li>
         <li className={productionReady ? "done" : "warn"}>
           Template on production path ({templateId})
         </li>

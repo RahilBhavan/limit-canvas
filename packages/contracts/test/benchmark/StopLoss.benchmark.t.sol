@@ -13,11 +13,13 @@ contract StopLossBenchmarkTest is Test {
 
   function setUp() public {
     oracle = new MockOracle();
-    oracle.setAnswer(1500e8);
+    vm.warp(1_700_000_000);
+    oracle.setDecimals(8);
+    oracle.setRound(7, 1500e8, block.timestamp, 7);
   }
 
-  function testBenchmark_optimized() public {
-    optimized.checkPrice(address(oracle), 1000e8, true);
+  function testBenchmark_optimized() public view {
+    optimized.checkPrice(address(oracle), 1000e8, true, 1 hours, 8);
   }
 
   function testBenchmark_naive() public {

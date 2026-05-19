@@ -1,6 +1,9 @@
 "use client";
 
-import type { ReadinessGateId, ReadinessItem } from "@/lib/strategy-workstation";
+import type {
+  ReadinessGateId,
+  ReadinessItem,
+} from "@/lib/strategy-workstation";
 
 interface MainnetGateProgressProps {
   items: ReadinessItem[];
@@ -32,6 +35,7 @@ export function MainnetGateProgress({
       <div
         className="mainnet-progress-bar"
         role="progressbar"
+        tabIndex={0}
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -40,7 +44,8 @@ export function MainnetGateProgress({
         <div className="mainnet-progress-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="mainnet-progress-caption">
-        {total} gates: template, network, proofs, warnings, and hash confirmations.
+        {total} gates: template, network, proofs, warnings, and hash
+        confirmations.
       </p>
       <GateChecklist
         items={items}
@@ -50,7 +55,6 @@ export function MainnetGateProgress({
     </div>
   );
 }
-
 
 function GateChecklist({
   items,

@@ -1,4 +1,5 @@
 import {
+  type AuditProvenance,
   type StrategyDocument,
   getTemplateCatalogEntry,
   validateExtensionTraits,
@@ -10,9 +11,11 @@ import {
   buildSaltWithExtension,
   buildStopLossPredicate,
   computeExtensionHash,
+  lookupOracle,
   packPredicateOnlyExtension,
 } from "@limit-canvas/lop-sdk";
 import { keccak256, stringToHex } from "viem";
+import bytecodeHashesData from "./bytecode-hashes.json" with { type: "json" };
 import {
   type GeneratedArtifact,
   generateDcaRegistry,
@@ -24,9 +27,15 @@ import {
   generateTwapSliceGetter,
 } from "./templates.js";
 
+const BYTECODE_HASHES = bytecodeHashesData as Record<
+  string,
+  { compiler: string; bytecodeHash: string }
+>;
+
 export interface CodegenResult {
   doc: StrategyDocument;
   extensionHash: string;
+  bytecodeHash: string | null;
   predicateTree: CompiledPredicateTree;
   artifacts: GeneratedArtifact[];
 }
@@ -63,6 +72,7 @@ interface ArtifactManifest {
   compiledPredicateTree: CompiledPredicateTree;
   extensionHash: string;
   bytecodeHash: string | null;
+  audit: AuditProvenance | null;
   warnings: string[];
   testCommandResults: {
     tests: string;
@@ -132,6 +142,25 @@ export function generateArtifacts(doc: StrategyDocument): CodegenResult {
   const salt = buildSaltWithExtension(1n, extension);
   const catalogEntry = getTemplateCatalogEntry(doc.templateId);
   const warnings = validateExtensionTraits(enriched);
+  if (doc.block.type === "stop-loss") {
+    const known = lookupOracle(doc.network.chainId, doc.block.oracle);
+    if (!known) {
+      warnings.push(
+        `Oracle ${doc.block.oracle} is not in the curated Chainlink allowlist for chain ${doc.network.chainId} — verify the aggregator manually before mainnet.`,
+      );
+    } else {
+      if (known.decimals !== doc.block.decimals) {
+        warnings.push(
+          `Configured decimals (${doc.block.decimals}) do not match ${known.name} feed decimals (${known.decimals}).`,
+        );
+      }
+      if (doc.block.staleAfter < known.heartbeatSeconds) {
+        warnings.push(
+          `staleAfter (${doc.block.staleAfter}s) is shorter than ${known.name} heartbeat (${known.heartbeatSeconds}s); fills will frequently revert as stale.`,
+        );
+      }
+    }
+  }
 
   const id = doc.templateId;
   const artifacts: GeneratedArtifact[] = [
@@ -211,7 +240,8 @@ export function generateArtifacts(doc: StrategyDocument): CodegenResult {
     graph: doc.graph ?? null,
     compiledPredicateTree: predicateTree,
     extensionHash,
-    bytecodeHash: null,
+    bytecodeHash: BYTECODE_HASHES[doc.templateId]?.bytecodeHash ?? null,
+    audit: doc.audit ?? null,
     warnings,
     testCommandResults: {
       tests: "not-run",
@@ -225,7 +255,13 @@ export function generateArtifacts(doc: StrategyDocument): CodegenResult {
     content: `${JSON.stringify(manifest, null, 2)}\n`,
   });
 
-  return { doc: enriched, extensionHash, predicateTree, artifacts };
+  return {
+    doc: enriched,
+    extensionHash,
+    bytecodeHash: manifest.bytecodeHash,
+    predicateTree,
+    artifacts,
+  };
 }
 
 function compilePredicateTree(

@@ -181,6 +181,7 @@ export type ReadinessGateId =
   | "gas"
   | "warnings"
   | "extension-hash"
+  | "bytecode-hash"
   | "explicit-confirm";
 
 export type ReadinessFixTarget =
@@ -430,8 +431,10 @@ export function readinessItems(
   proof: ProofStatus,
   reviewed: {
     extensionHash: boolean;
+    bytecodeHash: boolean;
     explicitConfirm: boolean;
   },
+  bytecodeHash: string | null = null,
 ): ReadinessItem[] {
   const maturity = getTemplateMaturity(doc.templateId);
   const maturityOk = MAINNET_READY_MATURITIES.includes(maturity);
@@ -493,6 +496,20 @@ export function readinessItems(
       detail: reviewed.extensionHash ? "confirmed" : "required",
       fixLabel: "Confirm extension hash",
       fixTarget: "review",
+    },
+    {
+      id: "bytecode-hash",
+      label: "Bytecode hash reviewed",
+      ok: bytecodeHash != null && reviewed.bytecodeHash,
+      detail: bytecodeHash
+        ? reviewed.bytecodeHash
+          ? `confirmed · ${shortHex(bytecodeHash)}`
+          : `review ${shortHex(bytecodeHash)}`
+        : "generate artifacts to surface the hash",
+      fixLabel: bytecodeHash
+        ? "Confirm bytecode hash"
+        : "Generate artifacts first",
+      fixTarget: bytecodeHash ? "review" : "generate",
     },
     {
       id: "explicit-confirm",
@@ -557,23 +574,26 @@ export function reviewStrategy(
       return {
         fillsWhen: [
           `oracle price is ${doc.block.direction} ${doc.block.threshold}`,
+          `oracle reported a positive answer within the last ${doc.block.staleAfter}s`,
           ...gasGuard,
         ],
         failsWhen: [
           `oracle price has not crossed ${doc.block.direction} ${doc.block.threshold}`,
+          "oracle answer is stale, non-positive, or from an incomplete round",
+          `oracle reports decimals other than ${doc.block.decimals}`,
           ...(addons.gasGuard.enabled
             ? [`base fee is above ${addons.gasGuard.maxGwei} gwei`]
             : []),
         ],
         assumptions: [
-          "oracle address returns a fresh positive answer",
-          "threshold uses the same decimals as the oracle feed",
+          `${doc.block.staleAfter}s heartbeat matches the configured feed`,
+          "configured oracle address belongs to a feed you trust (Chainlink registry recommended)",
           "takers submit the extension calldata at fill time",
         ],
         risks: [
-          "stale oracle answer",
-          "threshold decimals mismatch",
+          "trusted-but-compromised oracle (e.g. governance attack on aggregator)",
           "strict gas guard can prevent timely execution",
+          "feed retired or aggregator rotated — update DSL and redeploy",
         ],
         mainnetBlockers: baseMainnetBlockers,
       };

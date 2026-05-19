@@ -29,6 +29,13 @@ jobs:
         run: |
           forge snapshot --match-path "test/benchmark/*"
           forge snapshot --check --match-path "test/benchmark/*"
+      - uses: oven-sh/setup-bun@v2
+      - name: Install workspace deps
+        run: bun install
+      - name: Refresh codegen bytecode-hashes snapshot
+        run: bun run snapshot-bytecode
+      - name: Verify bytecode-hashes snapshot is in sync
+        run: git diff --exit-code packages/codegen/src/bytecode-hashes.json
 
   typescript:
     runs-on: ubuntu-latest

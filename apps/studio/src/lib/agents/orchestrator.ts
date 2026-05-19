@@ -1,18 +1,20 @@
-import {
-  parseStrategyDocument,
-  type StrategyDocument,
-} from "@limit-canvas/hook-dsl";
+import type { AssistRequest, AssistResponse } from "@/lib/agents/schemas";
+import { defaultDocument } from "@/lib/default-dsl";
+import { plainLanguageSummary } from "@/lib/strategy-summary";
 import {
   promptToAddons,
   promptToStrategyDocument,
   reviewStrategy,
 } from "@/lib/strategy-workstation";
-import { plainLanguageSummary } from "@/lib/strategy-summary";
-import { defaultDocument } from "@/lib/default-dsl";
-import type { AssistRequest, AssistResponse } from "@/lib/agents/schemas";
+import {
+  type StrategyDocument,
+  parseStrategyDocument,
+} from "@limit-canvas/hook-dsl";
 import type { TemplateId } from "@limit-canvas/hook-dsl";
 
-export async function runAssist(request: AssistRequest): Promise<AssistResponse> {
+export async function runAssist(
+  request: AssistRequest,
+): Promise<AssistResponse> {
   if (process.env.OPENAI_API_KEY) {
     const { runWithLlm } = await import("@/lib/agents/llm");
     const llm = await runWithLlm(request);
@@ -41,7 +43,9 @@ function intentFromRules(prompt: string): AssistResponse {
     bullets.push("Sounds like a stop-loss when price drops.");
   }
   if (/gas|gwei|fee/.test(text)) {
-    bullets.push("You may want a gas cap so the order does not fill during spikes.");
+    bullets.push(
+      "You may want a gas cap so the order does not fill during spikes.",
+    );
   }
   if (bullets.length === 0) {
     bullets.push(
@@ -60,17 +64,12 @@ function intentFromRules(prompt: string): AssistResponse {
   };
 }
 
-function strategyFromRules(
-  prompt: string,
-  docJson?: string,
-): AssistResponse {
+function strategyFromRules(prompt: string, docJson?: string): AssistResponse {
   const current = docJson
     ? parseStrategyDocument(JSON.parse(docJson))
     : defaultDocument("stop-loss");
-  const next = promptToStrategyDocument(
-    prompt,
-    current,
-    (id: TemplateId) => defaultDocument(id),
+  const next = promptToStrategyDocument(prompt, current, (id: TemplateId) =>
+    defaultDocument(id),
   );
   const addons = promptToAddons(prompt, {
     gasGuard: { enabled: true, maxGwei: 25 },
@@ -95,13 +94,17 @@ function proofFromRules(
   if (!status) {
     return {
       headline: "Run checks first",
-      bullets: ["Click Run checks to execute Foundry tests, fuzz, and gas snapshots."],
+      bullets: [
+        "Click Run checks to execute Foundry tests, fuzz, and gas snapshots.",
+      ],
       confidence: "high",
       source: "rules",
     };
   }
   if (status.tests !== "pass") {
-    bullets.push("Contract tests did not pass — open Developer details for forge output.");
+    bullets.push(
+      "Contract tests did not pass — open Developer details for forge output.",
+    );
   } else {
     bullets.push("Contract tests passed.");
   }
@@ -120,9 +123,7 @@ function proofFromRules(
     bullets.push(`${failedMatch[1]} failing test(s) reported in the log.`);
   }
   const allGreen =
-    status.tests === "pass" &&
-    status.fuzz === "pass" &&
-    status.gas === "pass";
+    status.tests === "pass" && status.fuzz === "pass" && status.gas === "pass";
   return {
     headline: allGreen ? "Proof checks green" : "Proof checks need fixes",
     bullets,
@@ -158,4 +159,3 @@ function reviewFromRules(docJson?: string): AssistResponse {
     source: "rules",
   };
 }
-

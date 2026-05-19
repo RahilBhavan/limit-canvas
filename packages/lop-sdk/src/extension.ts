@@ -1,13 +1,15 @@
-import { keccak256, type Hex } from "viem";
+import { type Hex, keccak256 } from "viem";
 
 /**
  * LOP extension layout: 32-byte offset header + concatenated segments.
  * Predicate-only: only bytes [16..19] of header hold predicate end offset.
  */
 export function packPredicateOnlyExtension(predicateCalldata: Hex): Hex {
-  const pred = (predicateCalldata.startsWith("0x")
-    ? predicateCalldata
-    : `0x${predicateCalldata}`) as Hex;
+  const pred = (
+    predicateCalldata.startsWith("0x")
+      ? predicateCalldata
+      : `0x${predicateCalldata}`
+  ) as Hex;
   const predBytes = (pred.length - 2) / 2;
   if (predBytes === 0) return "0x";
 
@@ -24,16 +26,19 @@ export function packPredicateOnlyExtension(predicateCalldata: Hex): Hex {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return (`0x${headerHex}${pred.slice(2)}`) as Hex;
+  return `0x${headerHex}${pred.slice(2)}` as Hex;
 }
 
 /** Lower 160 bits of keccak256(extension) — encoded in order salt */
 export function computeExtensionHash(extension: Hex): Hex {
   const hash = keccak256(extension);
-  return (`0x${hash.slice(-40)}`) as Hex;
+  return `0x${hash.slice(-40)}` as Hex;
 }
 
-export function buildSaltWithExtension(saltHigh96: bigint, extension: Hex): bigint {
+export function buildSaltWithExtension(
+  saltHigh96: bigint,
+  extension: Hex,
+): bigint {
   const extHash = BigInt(computeExtensionHash(extension));
   return (saltHigh96 << 160n) | extHash;
 }

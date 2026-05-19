@@ -33,7 +33,8 @@ export function buildGasGuardPredicate(
 }
 
 /**
- * Stop-loss: oracle latestAnswer compared to threshold via strategy helper.
+ * Stop-loss: hardened Chainlink-consumer price predicate.
+ * Encodes a call to StopLossStrategy.checkPrice with staleness + decimals guards.
  */
 export function buildStopLossPredicate(
   strategyAddress: Hex,
@@ -49,8 +50,10 @@ export function buildStopLossPredicate(
           { name: "oracle", type: "address" },
           { name: "threshold", type: "uint256" },
           { name: "directionAbove", type: "bool" },
+          { name: "staleAfter", type: "uint256" },
+          { name: "expectedDecimals", type: "uint8" },
         ],
-        outputs: [{ type: "bool" }],
+        outputs: [{ type: "uint256" }],
       },
     ],
     functionName: "checkPrice",
@@ -58,6 +61,8 @@ export function buildStopLossPredicate(
       block.oracle as Hex,
       BigInt(block.threshold),
       block.direction === "above",
+      BigInt(block.staleAfter),
+      block.decimals,
     ],
   });
 

@@ -1,4 +1,5 @@
 export {
+  auditProvenanceSchema,
   DSL_VERSION,
   strategyDocumentSchema,
   templateIdSchema,
@@ -15,6 +16,7 @@ export type {
   TemplateStage,
 } from "./template-catalog.js";
 export type {
+  AuditProvenance,
   DcaScheduleBlock,
   GasGuardBlock,
   NetworkConfig,

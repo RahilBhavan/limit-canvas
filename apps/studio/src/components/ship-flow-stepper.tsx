@@ -40,12 +40,8 @@ export function ShipFlowStepper({
       {STEPS.map((step, index) => {
         const done =
           index < stepIndex ||
-          (step.id === "export" &&
-            artifactsReady &&
-            activeStep !== "export") ||
-          (step.id === "verify" &&
-            verifyReady &&
-            activeStep === "deploy");
+          (step.id === "export" && artifactsReady && activeStep !== "export") ||
+          (step.id === "verify" && verifyReady && activeStep === "deploy");
         const current = step.id === activeStep;
         const state = done ? "done" : current ? "current" : "upcoming";
         return (

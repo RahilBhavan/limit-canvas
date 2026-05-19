@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type {
+  auditProvenanceSchema,
   dcaScheduleBlockSchema,
   gasGuardBlockSchema,
   networkSchema,
@@ -12,6 +13,8 @@ import type {
   templateIdSchema,
   twapSliceBlockSchema,
 } from "./schemas.js";
+
+export type AuditProvenance = z.infer<typeof auditProvenanceSchema>;
 
 export type TemplateId = z.infer<typeof templateIdSchema>;
 export type StrategyDocument = z.infer<typeof strategyDocumentSchema>;

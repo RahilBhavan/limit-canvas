@@ -31,6 +31,8 @@ export function defaultDocument(templateId: TemplateId): StrategyDocument {
           oracle: "0x5555555555555555555555555555555555555555",
           threshold: "100000000000",
           direction: "below",
+          staleAfter: 3600,
+          decimals: 8,
         },
       };
     case "gas-guard":

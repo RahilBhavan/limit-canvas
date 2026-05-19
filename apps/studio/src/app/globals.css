@@ -280,7 +280,8 @@ h3 {
   letter-spacing: -0.005em;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease,
+  transition:
+    background 140ms ease, border-color 140ms ease, color 140ms ease,
     transform 80ms ease, box-shadow 140ms ease;
 }
 
@@ -493,8 +494,8 @@ h3 {
   color: inherit;
   cursor: pointer;
   text-align: left;
-  transition: border-color 140ms ease, background 140ms ease,
-    transform 80ms ease;
+  transition: border-color 140ms ease, background 140ms ease, transform 80ms
+    ease;
 }
 
 .phase-step:hover {
@@ -572,8 +573,10 @@ h3 {
 
 .composer-grid {
   display: grid;
-  grid-template-columns:
-    minmax(280px, 320px) minmax(0, 1fr) minmax(320px, 360px);
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(
+      320px,
+      360px
+    );
   gap: var(--sp-4);
   align-items: start;
 }
@@ -688,7 +691,7 @@ h3 {
   content: "+";
   margin-left: auto;
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-base);
   line-height: 1;
 }
@@ -705,7 +708,7 @@ h3 {
   margin-left: auto;
   margin-right: 8px;
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
 }
 
@@ -774,7 +777,7 @@ h3 {
   align-self: center;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -859,8 +862,8 @@ h3 {
   font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-sm);
   outline: none;
-  transition: border-color 140ms ease, background 140ms ease,
-    box-shadow 140ms ease;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms
+    ease;
 }
 
 .field input:hover {
@@ -972,7 +975,7 @@ h3 {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-pill);
   background: var(--canvas-soft);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -991,7 +994,7 @@ h3 {
   right: 12px;
   z-index: 4;
   margin: 0;
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--body-mid);
@@ -1083,7 +1086,7 @@ h3 {
   border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-md);
   background: var(--canvas-elev);
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans), var(--font-sans-fallback);
 }
 
 .strategy-node.ready {
@@ -1100,7 +1103,7 @@ h3 {
 
 .node-eyebrow {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1122,7 +1125,7 @@ h3 {
 .node-badge {
   padding: 1px 7px;
   border-radius: var(--radius-pill);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1145,7 +1148,7 @@ h3 {
 
 .node-detail {
   color: var(--body);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
 }
 
@@ -1239,14 +1242,6 @@ h3 {
   text-align: center;
 }
 
-.empty-state {
-  margin: 0;
-  padding: var(--sp-3) 0;
-  color: var(--body-mid);
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
 /* ─── Simulation panel ───────────────────────────────────────────────────── */
 
 .simulation-panel {
@@ -1324,7 +1319,7 @@ h3 {
   padding: 0;
   margin-bottom: 4px;
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1439,7 +1434,7 @@ h3 {
 
 .timeline-step span {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1502,7 +1497,7 @@ h3 {
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
   background: var(--canvas);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 12px;
   color: var(--body);
 }
@@ -1546,7 +1541,7 @@ h3 {
 
 .evidence b {
   color: var(--ink);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-sm);
   font-weight: 500;
   word-break: break-all;
@@ -1587,7 +1582,7 @@ h3 {
 
 .artifact-tabs small {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
 }
 
@@ -1709,7 +1704,7 @@ h3 {
   content: "+";
   float: right;
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
 }
 
 .preflight-collapsed[open] summary::after {
@@ -1780,7 +1775,7 @@ h3 {
 
 .review-list span {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1823,7 +1818,7 @@ h3 {
   justify-content: space-between;
   gap: var(--sp-2);
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1867,7 +1862,7 @@ h3 {
 
 .mainnet-progress-summary {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
 }
 
@@ -1962,7 +1957,7 @@ h3 {
 .gate-status-pill {
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1999,7 +1994,7 @@ h3 {
 
 .proof-card span {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2076,7 +2071,7 @@ h3 {
 
 .export-hash > span {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -2224,7 +2219,7 @@ h3 {
 .human-threshold > span,
 .gas-preset > span {
   color: var(--body-mid);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -2245,7 +2240,7 @@ h3 {
   border-radius: var(--radius-sm);
   background: var(--canvas-soft);
   color: var(--ink);
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-sm);
   outline: none;
 }
@@ -2339,7 +2334,7 @@ h3 {
 }
 
 .onboarding-eyebrow {
-  font-family: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--font-mono), var(--font-mono-fallback);
   font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.09em;

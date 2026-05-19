@@ -34,7 +34,10 @@ export const PRODUCTION_READY_TEMPLATE_IDS = [
 ] as const;
 
 /** Visible in UI but not recommended for Simple mode codegen. */
-export const PREVIEW_ONLY_TEMPLATE_IDS = ["twap-slice", "dca-schedule"] as const;
+export const PREVIEW_ONLY_TEMPLATE_IDS = [
+  "twap-slice",
+  "dca-schedule",
+] as const;
 
 export function isPreviewOnlyTemplate(id: string): boolean {
   return (PREVIEW_ONLY_TEMPLATE_IDS as readonly string[]).includes(id);

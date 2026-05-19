@@ -14,6 +14,7 @@
     "test": "bun run test:packages && bun run test:contracts",
     "bench": "bash scripts/bench.sh",
     "verify-extension": "bun run scripts/verify-extension.ts",
+    "snapshot-bytecode": "bun run --filter @limit-canvas/codegen snapshot-bytecode",
     "codegen": "bun run packages/codegen/src/cli.ts"
   },
   "devDependencies": {

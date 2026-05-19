@@ -55,6 +55,7 @@ export async function previewExtension(json: string): Promise<{
   calldataLength: number;
   tree: string[];
   warnings: string[];
+  bytecodeHash: string | null;
 }> {
   const doc = parseStrategyDocument(JSON.parse(json));
   const result = generateArtifacts(doc);
@@ -66,6 +67,9 @@ export async function previewExtension(json: string): Promise<{
   if (doc.block.type === "stop-loss") {
     tree.push(`Predicate → oracle ${doc.block.oracle}`);
     tree.push(`  ${doc.block.direction} ${doc.block.threshold}`);
+    tree.push(
+      `  staleAfter ${doc.block.staleAfter}s · decimals ${doc.block.decimals}`,
+    );
   }
   if (doc.block.type === "gas-guard") {
     tree.push(`Predicate → basefee <= ${doc.block.maxGwei} gwei`);
@@ -84,6 +88,7 @@ export async function previewExtension(json: string): Promise<{
     calldataLength: (ext.length - 2) / 2,
     tree,
     warnings,
+    bytecodeHash: result.bytecodeHash,
   };
 }
 

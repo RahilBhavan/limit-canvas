@@ -63,8 +63,8 @@ export function HumanThresholdField({
         </div>
       </div>
       <p className="field-hint">
-        {direction === "below" ? "Stop-loss" : "Take-profit"}: fills when price is{" "}
-        {direction} ${usd || "…"}.
+        {direction === "below" ? "Stop-loss" : "Take-profit"}: fills when price
+        is {direction} ${usd || "…"}.
       </p>
     </div>
   );

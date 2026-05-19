@@ -4,8 +4,14 @@
  * Usage: bun run scripts/verify-extension.ts path/to/strategy.json
  */
 import { readFileSync } from "node:fs";
-import { parseStrategyDocument, validateExtensionTraits } from "@limit-canvas/hook-dsl";
-import { computeExtensionHash, packPredicateOnlyExtension } from "@limit-canvas/lop-sdk";
+import {
+  parseStrategyDocument,
+  validateExtensionTraits,
+} from "@limit-canvas/hook-dsl";
+import {
+  computeExtensionHash,
+  packPredicateOnlyExtension,
+} from "@limit-canvas/lop-sdk";
 
 const path = process.argv[2];
 if (!path) {
@@ -22,7 +28,11 @@ const hash = computeExtensionHash(extensionHex);
 
 console.log("Template:", doc.templateId);
 console.log("Extension hash (salt low 160):", hash);
-console.log("Extension calldata length:", (extensionHex.length - 2) / 2, "bytes");
+console.log(
+  "Extension calldata length:",
+  (extensionHex.length - 2) / 2,
+  "bytes",
+);
 if (warnings.length > 0) {
   console.warn("Warnings:");
   for (const w of warnings) console.warn(" -", w);

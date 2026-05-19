@@ -22,11 +22,13 @@ interface PreflightPanelProps {
   artifactsReady: boolean;
   reviewed: {
     extensionHash: boolean;
+    bytecodeHash: boolean;
     explicitConfirm: boolean;
   };
   setReviewed: Dispatch<
     SetStateAction<{
       extensionHash: boolean;
+      bytecodeHash: boolean;
       explicitConfirm: boolean;
     }>
   >;
@@ -38,6 +40,7 @@ interface PreflightPanelProps {
   lopVerified: boolean;
   saltMatched: boolean;
   extensionHash: string;
+  bytecodeHash: string | null;
   makerTraits: string;
   onRunChecks: () => void;
   onGenerate: () => void;
@@ -63,6 +66,7 @@ export function PreflightPanel({
   lopVerified,
   saltMatched,
   extensionHash,
+  bytecodeHash,
   makerTraits,
   onRunChecks,
   onGenerate,
@@ -122,6 +126,10 @@ export function PreflightPanel({
             />
             <div className="hash-line-stack">
               <HashLine label="extension" value={extensionHash} />
+              <HashLine
+                label="bytecode"
+                value={bytecodeHash ?? "generate artifacts first"}
+              />
               <HashLine label="maker traits" value={makerTraits} />
             </div>
           </section>
@@ -141,6 +149,27 @@ export function PreflightPanel({
                   }
                 />
                 Extension hash reviewed
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={reviewed.bytecodeHash}
+                  disabled={!bytecodeHash}
+                  onChange={(event) =>
+                    setReviewed((current) => ({
+                      ...current,
+                      bytecodeHash: event.target.checked,
+                    }))
+                  }
+                />
+                Bytecode hash reviewed
+                {bytecodeHash ? (
+                  <code className="hash-inline">{bytecodeHash}</code>
+                ) : (
+                  <span className="hash-pending">
+                    (run Generate to populate)
+                  </span>
+                )}
               </label>
               <label>
                 <input

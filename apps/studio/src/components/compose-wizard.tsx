@@ -106,6 +106,7 @@ export function ComposeWizard({
   const [proof, setProof] = useState<ProofStatus>(EMPTY_PROOF);
   const [reviewed, setReviewed] = useState({
     extensionHash: false,
+    bytecodeHash: false,
     explicitConfirm: false,
   });
   const [simulationInput, setSimulationInput] =
@@ -149,7 +150,13 @@ export function ComposeWizard({
   const warnings = preview?.warnings ?? [];
   const extension = preview?.extension ?? "0x";
   const salt = saltCompatibility(extension);
-  const readiness = readinessItems(doc, warnings, proof, reviewed);
+  const readiness = readinessItems(
+    doc,
+    warnings,
+    proof,
+    reviewed,
+    preview?.bytecodeHash ?? null,
+  );
   const lopVerified =
     readiness.find((i) => i.label === "LOP address")?.ok ?? false;
   const saltMatched = extension !== "0x" && salt !== "0";
@@ -170,6 +177,7 @@ export function ComposeWizard({
     setArtifacts([]);
     setReviewed({
       extensionHash: false,
+      bytecodeHash: false,
       explicitConfirm: false,
     });
   }, []);
@@ -394,6 +402,7 @@ export function ComposeWizard({
     loadExample(demo);
     setReviewed({
       extensionHash: true,
+      bytecodeHash: true,
       explicitConfirm: false,
     });
     generateBundle(attachGraph(demo.doc, demo.addons));
@@ -571,6 +580,7 @@ export function ComposeWizard({
             lopVerified={lopVerified}
             saltMatched={saltMatched}
             extensionHash={preview?.hash ?? "pending"}
+            bytecodeHash={preview?.bytecodeHash ?? null}
             makerTraits={makerTraitsLabel(extension !== "0x")}
             onRunChecks={handleProofChecks}
             onGenerate={handleGenerate}
@@ -644,6 +654,8 @@ const PORTFOLIO_EXAMPLES: PortfolioExample[] = [
         oracle: "0x5555555555555555555555555555555555555555",
         threshold: "75000000000",
         direction: "below",
+        staleAfter: 3600,
+        decimals: 8,
       },
     },
     addons: { gasGuard: { enabled: true, maxGwei: 25 } },
@@ -1044,6 +1056,20 @@ function TemplateControls({
             updateDoc((c) => ({ ...c, block: { ...doc.block, oracle } }))
           }
         />
+        <NumberField
+          label="Heartbeat (staleAfter, seconds)"
+          value={doc.block.staleAfter}
+          onChange={(staleAfter) =>
+            updateDoc((c) => ({ ...c, block: { ...doc.block, staleAfter } }))
+          }
+        />
+        <NumberField
+          label="Feed decimals"
+          value={doc.block.decimals}
+          onChange={(decimals) =>
+            updateDoc((c) => ({ ...c, block: { ...doc.block, decimals } }))
+          }
+        />
       </div>
     );
   }
@@ -1232,6 +1258,11 @@ function ArtifactDrawer({
             label="ext hash"
             value={shortHash(manifestSummary.extensionHash)}
           />
+          <Evidence
+            label="bytecode hash"
+            value={shortHash(manifestSummary.bytecodeHash)}
+          />
+          <Evidence label="audit" value={manifestSummary.audit} />
           <Evidence label="lop" value={manifestSummary.lop} />
         </div>
       )}
@@ -1280,21 +1311,35 @@ function parseManifestSummary(content: string): {
   template: string;
   predicate: string;
   extensionHash: string;
+  bytecodeHash: string;
+  audit: string;
   lop: string;
 } | null {
   try {
     const parsed = JSON.parse(content) as {
       dslHash?: string;
       extensionHash?: string;
+      bytecodeHash?: string | null;
       template?: { id?: string; maturity?: string };
       compiledPredicateTree?: { mode?: string; nodes?: unknown[] };
       lop?: { version?: string; chainId?: number };
+      audit?: {
+        auditor?: string;
+        reportUrl?: string;
+        commitHash?: string;
+        date?: string;
+      } | null;
     };
+    const audit = parsed.audit;
     return {
       dslHash: parsed.dslHash ?? "missing",
       template: `${parsed.template?.id ?? "unknown"} / ${parsed.template?.maturity ?? "draft"}`,
       predicate: `${parsed.compiledPredicateTree?.mode ?? "none"} / ${parsed.compiledPredicateTree?.nodes?.length ?? 0} node(s)`,
       extensionHash: parsed.extensionHash ?? "missing",
+      bytecodeHash: parsed.bytecodeHash ?? "missing",
+      audit: audit
+        ? `${audit.auditor ?? "?"} · ${audit.date ?? "?"} · ${audit.commitHash?.slice(0, 8) ?? "?"}`
+        : "none",
       lop: `${parsed.lop?.version ?? "unknown"} / ${parsed.lop?.chainId ?? "?"}`,
     };
   } catch {

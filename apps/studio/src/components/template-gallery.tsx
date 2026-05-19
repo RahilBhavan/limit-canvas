@@ -27,9 +27,9 @@ export function TemplateGallery({ value, onChange }: TemplateGalleryProps) {
           key={template.id}
           template={template}
           selected={template.id === value}
-          previewOnly={(PREVIEW_ONLY_TEMPLATE_IDS as readonly string[]).includes(
-            template.id,
-          )}
+          previewOnly={(
+            PREVIEW_ONLY_TEMPLATE_IDS as readonly string[]
+          ).includes(template.id)}
           onSelect={() => onChange(template.id)}
         />
       ))}

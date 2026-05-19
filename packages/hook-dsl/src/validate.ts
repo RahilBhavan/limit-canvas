@@ -27,5 +27,11 @@ export function validateExtensionTraits(doc: StrategyDocument): string[] {
     warnings.push("mainnet deploy blocked until audited: true in DSL.");
   }
 
+  if (doc.audited && !doc.audit) {
+    warnings.push(
+      "audited: true is set without an `audit` provenance object (auditor, reportUrl, scope, commitHash, date). The boolean form is deprecated for mainnet.",
+    );
+  }
+
   return warnings;
 }

@@ -19,6 +19,8 @@
     "type": "stop-loss",
     "oracle": "0x5555555555555555555555555555555555555555",
     "threshold": "100000000000",
-    "direction": "below"
+    "direction": "below",
+    "staleAfter": 3600,
+    "decimals": 8
   }
 }

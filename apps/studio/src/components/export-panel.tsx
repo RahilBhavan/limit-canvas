@@ -25,10 +25,12 @@ export function ExportPanel({
       <div className="export-hash">
         <span>Extension hash</span>
         <p className="export-hash-explainer">
-          Unique fingerprint of your packed extension. LOP uses the low 160 bits in
-          the order salt — mismatches reject fills.
+          Unique fingerprint of your packed extension. LOP uses the low 160 bits
+          in the order salt — mismatches reject fills.
         </p>
-        <code>{extensionHash === "pending" ? "Generate first" : extensionHash}</code>
+        <code>
+          {extensionHash === "pending" ? "Generate first" : extensionHash}
+        </code>
         {extensionHash !== "pending" && (
           <button
             type="button"

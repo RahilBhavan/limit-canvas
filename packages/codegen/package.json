@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "snapshot-bytecode": "bun run scripts/snapshot-bytecode-hashes.ts"
   },
   "dependencies": {
     "@limit-canvas/hook-dsl": "workspace:*",

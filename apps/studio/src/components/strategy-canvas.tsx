@@ -86,7 +86,8 @@ function StrategyCanvasInner({
   const flow = useReactFlow<StrategyNode, Edge>();
   const [isDropHot, setIsDropHot] = useState(false);
   const [dropLabel, setDropLabel] = useState("Drop strategy blocks here");
-  const isEmpty = doc.order.maker === "0x0000000000000000000000000000000000000000";
+  const isEmpty =
+    doc.order.maker === "0x0000000000000000000000000000000000000000";
   const graph = useMemo(
     () => buildGraph(doc, addons, extensionHash, warnings),
     [doc, addons, extensionHash, warnings],
@@ -398,7 +399,10 @@ function edge(source: string, target: string, label: string): Edge {
   };
 }
 
-function snapPosition(position: { x: number; y: number }): { x: number; y: number } {
+function snapPosition(position: { x: number; y: number }): {
+  x: number;
+  y: number;
+} {
   return {
     x: Math.round(position.x / GRID_SNAP) * GRID_SNAP,
     y: Math.round(position.y / GRID_SNAP) * GRID_SNAP,
@@ -413,17 +417,59 @@ function CanvasQuickStart({
   onRunDemo?: () => void;
 }) {
   return (
-    <div className="canvas-quick-start" role="region" aria-label="Canvas quick start">
+    <div
+      className="canvas-quick-start"
+      role="region"
+      aria-label="Canvas quick start"
+    >
       <div className="canvas-quick-start-art" aria-hidden="true">
-        <svg viewBox="0 0 120 80" width="120" height="80">
-          <rect x="4" y="28" width="32" height="24" rx="4" fill="none" stroke="currentColor" />
-          <rect x="44" y="16" width="32" height="24" rx="4" fill="none" stroke="currentColor" />
-          <rect x="84" y="28" width="32" height="24" rx="4" fill="none" stroke="currentColor" />
-          <path d="M36 40 H44 M76 28 V40 H84" stroke="currentColor" fill="none" />
+        <svg
+          viewBox="0 0 120 80"
+          width="120"
+          height="80"
+          aria-hidden="true"
+          role="img"
+        >
+          <title>Canvas illustration</title>
+          <rect
+            x="4"
+            y="28"
+            width="32"
+            height="24"
+            rx="4"
+            fill="none"
+            stroke="currentColor"
+          />
+          <rect
+            x="44"
+            y="16"
+            width="32"
+            height="24"
+            rx="4"
+            fill="none"
+            stroke="currentColor"
+          />
+          <rect
+            x="84"
+            y="28"
+            width="32"
+            height="24"
+            rx="4"
+            fill="none"
+            stroke="currentColor"
+          />
+          <path
+            d="M36 40 H44 M76 28 V40 H84"
+            stroke="currentColor"
+            fill="none"
+          />
         </svg>
       </div>
       <strong>Build your order logic</strong>
-      <p>Pick a template or run the portfolio demo. Blocks snap to the grid as you arrange them.</p>
+      <p>
+        Pick a template or run the portfolio demo. Blocks snap to the grid as
+        you arrange them.
+      </p>
       <div className="canvas-quick-start-actions">
         <button type="button" onClick={() => onPickTemplate("stop-loss")}>
           Stop-loss
@@ -432,7 +478,11 @@ function CanvasQuickStart({
           Gas guard
         </button>
         {onRunDemo && (
-          <button type="button" className="secondary-button" onClick={onRunDemo}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onRunDemo}
+          >
             Run demo flow
           </button>
         )}

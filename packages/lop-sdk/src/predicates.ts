@@ -125,3 +125,49 @@ export function buildAndPredicate(predicates: Hex[]): Hex {
     args: [offsets, `0x${packed}`],
   });
 }
+
+export function buildOrPredicate(predicates: Hex[]): Hex {
+  let offsets = 0n;
+  let cursor = 0;
+  const packed = predicates
+    .map((predicate, index) => {
+      const bytesLength = (predicate.length - 2) / 2;
+      cursor += bytesLength;
+      offsets |= BigInt(cursor) << BigInt(index * 32);
+      return predicate.slice(2);
+    })
+    .join("");
+
+  return encodeFunctionData({
+    abi: [
+      {
+        name: "or",
+        type: "function",
+        stateMutability: "view",
+        inputs: [
+          { name: "offsets", type: "uint256" },
+          { name: "data", type: "bytes" },
+        ],
+        outputs: [{ type: "bool" }],
+      },
+    ],
+    functionName: "or",
+    args: [offsets, `0x${packed}`],
+  });
+}
+
+export function buildNotPredicate(innerPredicate: Hex): Hex {
+  return encodeFunctionData({
+    abi: [
+      {
+        name: "not",
+        type: "function",
+        stateMutability: "view",
+        inputs: [{ name: "data", type: "bytes" }],
+        outputs: [{ type: "bool" }],
+      },
+    ],
+    functionName: "not",
+    args: [innerPredicate],
+  });
+}

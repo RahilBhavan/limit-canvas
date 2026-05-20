@@ -9,7 +9,7 @@
   },
   "twap-slice": {
     "compiler": "0.8.23",
-    "bytecodeHash": "0x511ecf4e8ec6ff4c799993bfd653448ca06f035bbf274750faf4f82321eadb66"
+    "bytecodeHash": "0x367415822d30ab365e4c8f6eeb313b653b1b8794c1468ba1e13f70d482085c2c"
   },
   "dca-schedule": {
     "compiler": "0.8.23",

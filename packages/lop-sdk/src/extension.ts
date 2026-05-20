@@ -1,32 +1,68 @@
 import { type Hex, keccak256 } from "viem";
 
-/**
- * LOP extension layout: 32-byte offset header + concatenated segments.
- * Predicate-only: only bytes [16..19] of header hold predicate end offset.
- */
-export function packPredicateOnlyExtension(predicateCalldata: Hex): Hex {
-  const pred = (
-    predicateCalldata.startsWith("0x")
-      ? predicateCalldata
-      : `0x${predicateCalldata}`
-  ) as Hex;
-  const predBytes = (pred.length - 2) / 2;
-  if (predBytes === 0) return "0x";
+export interface ExtensionFields {
+  makerAssetSuffix?: Hex;
+  takerAssetSuffix?: Hex;
+  makingAmountData?: Hex;
+  takingAmountData?: Hex;
+  predicate?: Hex;
+  makerPermit?: Hex;
+  preInteractionData?: Hex;
+  postInteractionData?: Hex;
+}
 
-  const paddedLen = Math.ceil(predBytes / 32) * 32;
-  const endOffset = 32 + paddedLen;
+export function packExtension(fields: ExtensionFields): Hex {
+  const fieldList = [
+    fields.makerAssetSuffix,
+    fields.takerAssetSuffix,
+    fields.makingAmountData,
+    fields.takingAmountData,
+    fields.predicate,
+    fields.makerPermit,
+    fields.preInteractionData,
+    fields.postInteractionData,
+  ];
+
+  let concatHex = "";
+  const offsets: number[] = [];
+  let currentOffset = 0;
+
+  for (let i = 0; i < 8; i++) {
+    const rawVal = fieldList[i];
+    let val = "";
+    if (rawVal) {
+      val = rawVal.startsWith("0x") ? rawVal.slice(2) : rawVal;
+    }
+    if (val.length > 0) {
+      concatHex += val;
+      currentOffset += val.length / 2;
+    }
+    offsets.push(currentOffset);
+  }
+
+  if (currentOffset === 0) {
+    return "0x";
+  }
 
   const header = new Uint8Array(32);
-  header[16] = (endOffset >> 24) & 0xff;
-  header[17] = (endOffset >> 16) & 0xff;
-  header[18] = (endOffset >> 8) & 0xff;
-  header[19] = endOffset & 0xff;
+  for (let i = 0; i < 8; i++) {
+    const offsetVal = offsets[i] ?? 0;
+    const byteIndex = (7 - i) * 4;
+    header[byteIndex] = (offsetVal >> 24) & 0xff;
+    header[byteIndex + 1] = (offsetVal >> 16) & 0xff;
+    header[byteIndex + 2] = (offsetVal >> 8) & 0xff;
+    header[byteIndex + 3] = offsetVal & 0xff;
+  }
 
   const headerHex = Array.from(header)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return `0x${headerHex}${pred.slice(2)}` as Hex;
+  return `0x${headerHex}${concatHex}` as Hex;
+}
+
+export function packPredicateOnlyExtension(predicateCalldata: Hex): Hex {
+  return packExtension({ predicate: predicateCalldata });
 }
 
 /** Lower 160 bits of keccak256(extension) — encoded in order salt */

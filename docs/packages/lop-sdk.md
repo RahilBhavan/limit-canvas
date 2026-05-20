@@ -161,13 +161,13 @@ Produces calldata that LOP will execute as:
 arbitraryStaticCall(
   strategyAddress,
   abi.encodeWithSignature(
-    "checkPrice(address,uint256,bool)",
-    block.oracle, block.threshold, block.direction === "above"
+    "checkPrice(address,uint256,bool,uint256,uint8)",
+    block.oracle, block.threshold, block.direction === "above", block.staleAfter, block.decimals
   )
 )
 ```
 
-[`StopLossStrategy.checkPrice`](../../packages/contracts/src/templates/StopLossStrategy.sol) reads `IPriceOracle.latestAnswer()` and returns `1`/`0`. It currently does **not** validate freshness, decimals, or aggregator address — see [the 1inch-review L3](../1inch-review.md#l3--stop-loss-assumes-ideal-oracle-behavior) and the P0 hardening list.
+[`StopLossStrategy.checkPrice`](../../packages/contracts/src/templates/StopLossStrategy.sol) reads the latest aggregator data from the oracle via `latestRoundData()`, asserts that the answer is positive and not stale (within `staleAfter` seconds), verifies that the round is complete, and checks that the oracle's decimals match `expectedDecimals` on-chain before executing the comparison.
 
 ### `buildAndPredicate(predicates)`
 

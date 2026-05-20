@@ -14,6 +14,8 @@ import {GasGuardStrategy} from "../../src/templates/GasGuardStrategy.sol";
 import {StopLossStrategy} from "../../src/templates/StopLossStrategy.sol";
 import {MockOracle} from "../../src/mocks/MockOracle.sol";
 import {LopOrderTestLib} from "../helpers/LopOrderTestLib.sol";
+import {TwapSliceGetter} from "../../src/templates/TwapSliceGetter.sol";
+import {DcaSeriesRegistry} from "../../src/templates/DcaSeriesRegistry.sol";
 
 /// @notice End-to-end fill through pinned LOP 4.3.2 using a studio gas-guard predicate.
 contract LopFillIntegrationTest is Test {
@@ -230,5 +232,78 @@ contract LopFillIntegrationTest is Test {
     bytes32 digest = this.orderHash(order_);
     (uint8 v, bytes32 sigR, bytes32 s) = vm.sign(MAKER_PK, digest);
     return (sigR, LopOrderTestLib.toVs(v, s));
+  }
+
+  event DcaSeriesRegistered(
+    bytes32 indexed seriesKey, address indexed maker, uint256 tranches, uint256 amountPerTranche, uint256 intervalSeconds
+  );
+
+  function test_fillOrderArgs_twap_slice_getter_succeeds() public {
+    TwapSliceGetter twapGetter = new TwapSliceGetter(1000 ether, 100 ether, 3600, block.timestamp);
+    bytes memory extension = LopOrderTestLib.buildGetterExtension(address(twapGetter), "");
+    uint256 salt = LopOrderTestLib.saltFromExtension(extension);
+
+    IOrderMixin.Order memory order = LopOrderTestLib.buildOrder(
+      maker,
+      maker,
+      address(makerToken),
+      address(takerToken),
+      1000 ether,
+      1000 ether,
+      salt
+    );
+
+    (bytes32 r, bytes32 vs) = _sign(order);
+    (TakerTraits traits, bytes memory args) =
+      LopOrderTestLib.buildTakerFillArgs(extension, order.takingAmount);
+
+    uint256 makerBefore = makerToken.balanceOf(maker);
+    uint256 takerBefore = takerToken.balanceOf(taker);
+
+    vm.prank(taker);
+    (uint256 makingAmount, uint256 takingAmount,) =
+      lop.fillOrderArgs(order, r, vs, 100 ether, traits, args);
+
+    assertEq(makingAmount, 100 ether);
+    assertEq(takingAmount, 100 ether);
+    assertEq(makerToken.balanceOf(maker), makerBefore - 100 ether);
+    assertEq(takerToken.balanceOf(taker), takerBefore - 100 ether);
+  }
+
+  function test_fillOrderArgs_twap_slice_getter_reverts_above_cap() public {
+    TwapSliceGetter twapGetter = new TwapSliceGetter(1000 ether, 100 ether, 3600, block.timestamp);
+    bytes memory extension = LopOrderTestLib.buildGetterExtension(address(twapGetter), "");
+    uint256 salt = LopOrderTestLib.saltFromExtension(extension);
+
+    IOrderMixin.Order memory order = LopOrderTestLib.buildOrder(
+      maker,
+      maker,
+      address(makerToken),
+      address(takerToken),
+      1000 ether,
+      1000 ether,
+      salt
+    );
+
+    (bytes32 r, bytes32 vs) = _sign(order);
+    (TakerTraits traits, bytes memory args) =
+      LopOrderTestLib.buildTakerFillArgs(extension, order.takingAmount);
+
+    vm.prank(taker);
+    vm.expectRevert(TwapSliceGetter.ExceedsTwapCappedAmount.selector);
+    lop.fillOrderArgs(order, r, vs, 101 ether, traits, args);
+  }
+
+  function test_registerDcaSeries_succeeds() public {
+    DcaSeriesRegistry registry = new DcaSeriesRegistry();
+    vm.expectEmit(true, true, false, true);
+    emit DcaSeriesRegistered(
+      keccak256(abi.encode(maker, 42, block.chainid)),
+      maker,
+      10,
+      5 ether,
+      3600
+    );
+    registry.registerSeries(maker, 10, 5 ether, 3600, 42);
   }
 }

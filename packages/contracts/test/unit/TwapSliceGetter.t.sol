@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {TwapSliceGetter} from "../../src/templates/TwapSliceGetter.sol";
+import {IOrderMixin} from "limit-order-protocol/interfaces/IOrderMixin.sol";
 
 contract TwapSliceGetterTest is Test {
   TwapSliceGetter internal getter;
@@ -16,7 +17,66 @@ contract TwapSliceGetterTest is Test {
   }
 
   function test_caps_requested_making() public {
-    uint256 fill = getter.getMakingAmount(500 ether, 1000 ether, bytes32(0));
+    IOrderMixin.Order memory order;
+    order.makingAmount = 1000 ether;
+    order.takingAmount = 1000 ether;
+    vm.expectRevert(TwapSliceGetter.ExceedsTwapCappedAmount.selector);
+    getter.getMakingAmount(
+      order,
+      "",
+      bytes32(0),
+      address(0),
+      500 ether,
+      1000 ether,
+      ""
+    );
+  }
+
+  function test_caps_requested_making_success() public {
+    IOrderMixin.Order memory order;
+    order.makingAmount = 1000 ether;
+    order.takingAmount = 1000 ether;
+    uint256 fill = getter.getMakingAmount(
+      order,
+      "",
+      bytes32(0),
+      address(0),
+      100 ether,
+      1000 ether,
+      ""
+    );
+    assertEq(fill, 100 ether);
+  }
+
+  function test_caps_requested_taking() public {
+    IOrderMixin.Order memory order;
+    order.makingAmount = 1000 ether;
+    order.takingAmount = 1000 ether;
+    vm.expectRevert(TwapSliceGetter.ExceedsTwapCappedAmount.selector);
+    getter.getTakingAmount(
+      order,
+      "",
+      bytes32(0),
+      address(0),
+      500 ether,
+      1000 ether,
+      ""
+    );
+  }
+
+  function test_caps_requested_taking_success() public {
+    IOrderMixin.Order memory order;
+    order.makingAmount = 1000 ether;
+    order.takingAmount = 1000 ether;
+    uint256 fill = getter.getTakingAmount(
+      order,
+      "",
+      bytes32(0),
+      address(0),
+      100 ether,
+      1000 ether,
+      ""
+    );
     assertEq(fill, 100 ether);
   }
 

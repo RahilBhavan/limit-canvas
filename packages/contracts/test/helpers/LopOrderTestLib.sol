@@ -20,6 +20,17 @@ library LopOrderTestLib {
     extension = abi.encodePacked(bytes32(offsets), predicate);
   }
 
+  /// @dev Extension with makingAmountData (field 2), takingAmountData (field 3), and predicate (field 4).
+  function buildGetterExtension(
+    address getter,
+    bytes memory predicate
+  ) internal pure returns (bytes memory extension) {
+    uint32 predLen = uint32(predicate.length);
+    uint32 end = 40 + predLen;
+    uint256 offsets = (uint256(end) << 224) | (uint256(end) << 192) | (uint256(end) << 160) | (uint256(end) << 128) | (40 << 96) | (20 << 64);
+    extension = abi.encodePacked(bytes32(offsets), getter, getter, predicate);
+  }
+
   /// @dev Matches LOP test helpers: low 160 bits of `keccak256(extension)` when using extensions.
   function saltFromExtension(bytes memory extension) internal pure returns (uint256 salt) {
     salt = uint256(keccak256(extension)) & ((1 << 160) - 1);

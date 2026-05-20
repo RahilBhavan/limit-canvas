@@ -43,6 +43,12 @@ describe("example strategies codegen", () => {
         (artifact) => artifact.relativePath === "extensions.json",
       );
       expect(extensions).toBeDefined();
+
+      for (const artifact of result.artifacts) {
+        if (artifact.relativePath.endsWith(".sol")) {
+          expect(artifact.content).toMatchSnapshot();
+        }
+      }
     });
   }
 

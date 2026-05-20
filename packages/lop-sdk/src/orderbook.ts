@@ -1,5 +1,6 @@
 import type { StrategyDocument } from "@limit-canvas/hook-dsl";
 import type { Hex } from "viem";
+import { packMakerTraits } from "./maker-traits.js";
 
 export interface OrderbookPayloadShape {
   orderHash: Hex;
@@ -24,6 +25,7 @@ export function buildOrderbookPayloadShape(
   extension: Hex,
   salt: bigint,
 ): OrderbookPayloadShape {
+  const makerTraits = packMakerTraits(doc.order, extension !== "0x");
   return {
     orderHash: "0x",
     signature: "0x",
@@ -36,7 +38,7 @@ export function buildOrderbookPayloadShape(
       takingAmount: doc.order.takingAmount,
       salt: salt.toString(),
       extension,
-      makerTraits: "0",
+      makerTraits,
     },
   };
 }

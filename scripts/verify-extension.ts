@@ -7,11 +7,11 @@ import { readFileSync } from "node:fs";
 import {
   parseStrategyDocument,
   validateExtensionTraits,
-} from "@limit-canvas/hook-dsl";
+} from "../packages/hook-dsl/src/index.ts";
 import {
   computeExtensionHash,
   packPredicateOnlyExtension,
-} from "@limit-canvas/lop-sdk";
+} from "../packages/lop-sdk/src/index.ts";
 
 const path = process.argv[2];
 if (!path) {

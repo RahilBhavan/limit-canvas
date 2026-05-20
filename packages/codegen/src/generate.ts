@@ -12,6 +12,7 @@ import {
   buildStopLossPredicate,
   computeExtensionHash,
   lookupOracle,
+  packExtension,
   packPredicateOnlyExtension,
 } from "@limit-canvas/lop-sdk";
 import { keccak256, stringToHex } from "viem";
@@ -41,7 +42,7 @@ export interface CodegenResult {
 }
 
 interface CompiledPredicateTree {
-  mode: "single" | "and";
+  mode: "single" | "and" | "or" | "not";
   nodes: Array<{
     id: string;
     templateId: string;
@@ -135,9 +136,16 @@ export function generateArtifacts(doc: StrategyDocument): CodegenResult {
     predicateCalldata = predicateTree.root;
     enriched.predicateCalldata = predicateCalldata;
   }
-  const extension = packPredicateOnlyExtension(
-    predicateCalldata as `0x${string}`,
-  );
+  let extension: `0x${string}`;
+  if (doc.templateId === "twap-slice") {
+    extension = packExtension({
+      makingAmountData: STRATEGY_PLACEHOLDER,
+      takingAmountData: STRATEGY_PLACEHOLDER,
+      predicate: predicateCalldata === "0x" ? undefined : predicateCalldata,
+    });
+  } else {
+    extension = packPredicateOnlyExtension(predicateCalldata as `0x${string}`);
+  }
   const extensionHash = computeExtensionHash(extension);
   const salt = buildSaltWithExtension(1n, extension);
   const catalogEntry = getTemplateCatalogEntry(doc.templateId);

@@ -12,7 +12,7 @@ A small, surprisingly disciplined toolchain for composing LOP v4.3.2 extensions.
 
 I'd be comfortable pointing a partner engineering team at this as a **reference implementation** for LOP extension composition. I would not yet be comfortable telling them "deploy what this generates to mainnet" — and the project explicitly agrees, gating mainnet behind `audited: true` plus bytecode review.
 
-The single biggest gap is that two of the four templates (TWAP, DCA) are preview-only on the codegen path, so the studio's "compose visually → ship Solidity" promise currently only fully holds for **stop-loss** and **gas-guard**.
+**Update since first review:** all four P0 release-blockers *and* the five P1 production-gap items below have been closed. All four templates (stop-loss, gas-guard, TWAP, DCA) are now first-class on the codegen path; the oracle is hardened; the bytecode hash is a real compiled hash; audit provenance is structured; `OR`/`NOT` predicate primitives and first-class maker traits have landed. The remaining open items (L4–L11) are deliberate scope boundaries — orderbook submission, multichain integration coverage — not foundational work.
 
 ---
 
@@ -70,47 +70,45 @@ That's enough to decide "this is serious."
 
 I'd rather list these candidly than have a partner discover them post-handoff.
 
-### L1 — Codegen coverage is narrow
+### L1 — Codegen coverage (Resolved)
 
-Only `stop-loss` and `gas-guard` have a true end-to-end DSL → Solidity → integration-test path. `twap-slice` and `dca-schedule` ship Solidity helpers and unit tests, but the studio explicitly marks them `preview` and the readiness panel will flag them. This is a correct call (no false production surface) but it limits the "look how much you can compose" pitch.
+All four templates now have a true end-to-end DSL → Solidity → manifest path. `twap-slice` and `dca-schedule` are `executable` + `graphCodegenExecutable` in the template catalog at `audit-ready` maturity, generate through `packages/codegen`, and are exercised by `LopFillIntegration.t.sol` (`test_fillOrderArgs_twap_slice_getter_succeeds`, `test_registerDcaSeries_succeeds`). There is no longer a `preview` tier — `PREVIEW_ONLY_TEMPLATE_IDS` is empty.
 
-### L2 — `bytecodeHash` is a placeholder
+### L2 — `bytecodeHash` is fully verified (Resolved)
 
-The manifest reserves `bytecodeHash` but does not currently populate it from a deterministic compile, and the readiness checklist asks the user to tick "Bytecode hash reviewed" without showing them a hash to review. For a partner deploying mainnet, this needs to be a real artifact (e.g. `keccak256` of the runtime bytecode emitted by a pinned `solc 0.8.23` build).
+The manifest now populates `bytecodeHash` using a deterministic compile process. The script `packages/codegen/scripts/snapshot-bytecode-hashes.ts` reads `deployedBytecode.object` from Forge's compilation output, computes the `keccak256` hash of the runtime bytecode, and commits it to `bytecode-hashes.json`. The Solidity compiler configuration in `foundry.toml` enforces metadata-independent builds via `bytecode_hash = "none"` and `cbor_metadata = false`. The studio UI surfaces the bytecode hash in the preflight gate checklist, allowing builders to explicitly verify and sign off on the exact bytecode hashes before staging to mainnet.
 
-### L3 — Stop-loss assumes ideal oracle behavior
+### L3 — Stop-loss oracle behavior hardened (Resolved)
 
-`StopLossStrategy.checkPrice` reads `IPriceOracle.latestAnswer()`, rejects non-positive answers, and compares against a threshold. It does **not** verify:
-- staleness (`updatedAt` / heartbeat),
-- round completeness (`answeredInRound >= roundId`),
-- aggregator decimals,
-- aggregator address against a chain-specific allowlist.
+`StopLossStrategy.checkPrice` has been fully hardened to read `latestRoundData()` and perform rigorous security checks before verifying threshold logic. It enforces:
+- Price staleness limits (reverts via `StaleAnswer` error if the difference between `block.timestamp` and `updatedAt` exceeds `staleAfter`),
+- Round completeness (asserts `updatedAt > 0` and `answeredInRound >= roundId`),
+- Aggregator decimals match (asserts decimals parameter matches target oracle decimals on-chain),
+- Curator allowlist check: the `@limit-canvas/lop-sdk` package exports a validated Chainlink oracle registry which triggers warnings if the chosen aggregator is off-list, or if `staleAfter` is configured shorter than the feed's official heartbeat.
 
-For Chainlink, that's the standard set of checks every audited consumer applies. The research dossier (`docs/plan/08-research-dossier.md`) flags this. Until those land, "stop-loss" is honest as a template but not safe as a production deployment.
+### L4 — TWAP/DCA liveness (Partially resolved)
 
-### L4 — TWAP/DCA liveness is undocumented in the artifact bundle
-
-The Solidity helpers and tests exist, but a real TWAP/DCA strategy only works if a taker/keeper actually pings the order every slice. There is no keeper integration (Chainlink Automation, Gelato, 1inch resolvers) and the generated README does not yet enumerate liveness assumptions. For a partner, "your DCA will silently stop filling if no taker bothers" is the kind of footgun that needs to be loud in the bundle, not just in the design docs.
+The footgun is now loud in the bundle: `generateReadme` emits a liveness section for TWAP and DCA spelling out that fills depend on a keeper pinging the order each slice, and `validateExtensionTraits` surfaces a DCA keeper warning in the studio. What remains out of scope is *shipping* a keeper integration — there is still no generated Chainlink Automation / Gelato / 1inch-resolver wiring, only the documented assumption.
 
 ### L5 — No orderbook submission path
 
 The SDK includes `buildOrderbookPayloadShape` to produce a payload matching `POST /orderbook/v4.1/{chain}`, but the studio explicitly does not submit. That's deliberate (and I agree — generating + signing + auto-submitting is a much larger trust surface), but it means the "compose → ship" flow ends at "you have a payload and an extension." A partner integrating this still needs their own submission pipeline.
 
-### L6 — `audited` is a single boolean
+### L6 — Structured audit provenance (Resolved)
 
-The template catalog uses `maturity: "draft" | "tested" | "benchmarked" | "audit-ready" | "mainnet-enabled"`. There is no provenance attached to `audit-ready`: no auditor name, report URL, scope, date, or commit hash. If 1inch ever signs off on a template, we'd want the provenance baked into the manifest (so a maker can verify "you said this template was audited by X at commit Y").
+The project now supports structured audit provenance. The Zod schema in `packages/hook-dsl` includes a nested `audit` metadata object (containing `auditor`, `reportUrl`, `scope`, `commitHash`, and `date`). This audit evidence is embedded verbatim into the generated strategy manifest. The studio's preflight panel deprecates the standalone `audited: true` boolean check in favor of verifying that this audit provenance object is populated and matches the active commit.
 
-### L7 — Predicate composition is `AND`-only
+### L7 — Predicate composition primitives (Resolved)
 
-`buildAndPredicate` and the codegen's `compilePredicateTree` only emit `PredicateHelper.and`. LOP supports `or`, `not`, `eq`, `lt`, `gt`, `arbitraryStaticCall`. The narrow set is fine for v1 (gas-safe stop-loss is `AND(stopLoss, gasGuard)`), but the visual canvas as built suggests more composability than the codegen currently delivers.
+`lop-sdk/src/predicates.ts` now exports `buildOrPredicate` and `buildNotPredicate` alongside `buildAndPredicate`, plus the `buildCompareGt` / `buildCompareLt` comparator builders. The strategy graph schema's `compiledPredicate.mode` accepts `single | and | or | not`, so the canvas and codegen agree on the composable set. `AND` remains the path the hero demo exercises end-to-end.
 
-### L8 — Maker traits are partly nominal
+### L8 — Maker traits as first-class DSL (Resolved)
 
-`makerTraitsLabel(hasExtension)` in `strategy-workstation.ts` and the corresponding helper give the user a status string, but the studio does not yet expose / generate maker traits flags (`USE_PERMIT2`, `ALLOW_PARTIAL_FILL`, `ALLOW_MULTIPLE_FILLS`, `NO_PARTIAL_FILLS`, etc.) as first-class controls. For some templates the wrong combination will silently break fills.
+`orderSchema` in `hook-dsl` now carries `allowPartialFills`, `allowMultipleFills`, `usePermit2`, `unwrapWeth`, `nonce`, `series`, `expiration`, and `privateTaker` as validated fields, surfaced as controls in the studio's Order panel. `strategyDocumentSchema.superRefine` enforces cross-field constraints (`twap-slice` requires `allowPartialFills && allowMultipleFills`). `lop-sdk/src/maker-traits.ts::packMakerTraits` packs them into the real MakerTraits bit layout (flags in the high bits, expiration/nonce/series fields in the low bits).
 
-### L9 — Gas benchmarks are helper-level, not fill-level
+### L9 — Fill-path benchmarks (Resolved)
 
-Benchmarks live in `test/benchmark/*` and measure the optimized helper vs a `NaiveGasChecker` baseline. That's useful as a regression guard, but a partner cares about "what's the gas cost of filling an order that uses this extension" — which would mean benchmarking the `fillOrderArgs` path. The research dossier flags this as "gas benchmark theater" risk; I agree.
+The project now includes a comprehensive fill-path benchmark test `packages/contracts/test/benchmark/StopLossFill.benchmark.t.sol` that snapshots the gas consumption of a real `fillOrderArgs` invocation on a composed stop-loss and gas-guard order. This ensures gas benchmarks reflect actual protocol execution rather than isolated helper calls. The gas snapshot is checked in and verified in CI on every run via `forge snapshot --check`.
 
 ### L10 — Single-chain demo
 
@@ -120,30 +118,34 @@ The chain registry covers ten chains, but the LOP integration test, the demo flo
 
 `packages/studio/src/lib/persisted-strategy.ts` uses `version: 1` and bails on mismatch, but if the DSL schema evolves the wizard will silently fall back to the default. For a tool that pitches reproducibility, the on-disk strategy should round-trip across DSL versions or fail loudly with a migration path.
 
-### L12 — Generated artifacts are emitted to memory, not the filesystem
+### L12 — Zip bundle export (Resolved)
 
-`generateFromDsl` returns `{ path, content }[]` and the UI offers a single-file concatenated `.txt` download. That's adequate for a hackathon demo. For a production handoff, a partner expects a zip with the directory structure preserved (so they can `forge build` it directly), or at minimum a `tar.gz`.
+The studio now exports a real `.zip` (via `fflate`) with the directory structure preserved — `src/`, `test/`, `script/`, `README.generated.md`, `extensions.json`, `manifest.json` — so a partner can unzip and `forge build` directly. `generateFromDsl` still returns `{ path, content }[]`; `downloadBundle` in `compose-wizard.tsx` packs those paths into the archive.
 
 ---
+
+## Resolved P0 Items (Mandatory before mainnet claims)
+
+All four critical security and verification P0 tasks have been resolved:
+
+1. **Oracle hardening for stop-loss:** Added `staleAfter` (seconds) and `decimals` to the DSL schema, updated `StopLossStrategy` to check `latestRoundData()` and revert on stale/dec-mismatch data. Created negative tests for all failure cases and a Chainlink oracle registry check in codegen.
+2. **Real bytecode hash in manifest:** Implemented a reproducible `forge build` bytecode hash generator that outputs `bytecode-hashes.json`. The compiler configuration in `foundry.toml` strips metadata, enabling hash consistency. The UI surfaces the compiled bytecode hash in the preflight readiness panel.
+3. **Audit provenance schema:** Added structured audit metadata Zod schema and validated it in the DSL parser, studio UI, and generated manifest.
+4. **End-to-end fill benchmark:** Added `StopLossFill.benchmark.t.sol` to record accurate `fillOrderArgs` gas consumption in `.gas-snapshot`, which is verified by CI.
 
 ## Improvement suggestions
 
 In priority order, what I'd want to see before promoting this from "reference implementation" to "officially recommended partner tooling."
 
-### P0 — Mandatory before mainnet claims
+### P1 — Closes the "production-grade" gap (Resolved)
 
-1. **Oracle hardening for stop-loss.** Add `staleAfter` (seconds), `decimals`, `aggregator allowlist` (Chainlink registry per-chain) to the DSL; emit the corresponding revert paths in `StopLossStrategy`; add a negative test that a stale price reverts the fill.
-2. **Real bytecode hash in the manifest.** Compile the generated contract through `solc 0.8.23` (or via a reproducible Foundry `forge build --use 0.8.23`), keccak256 the runtime, embed in manifest, show in the readiness checklist before the "Bytecode hash reviewed" tick is meaningful.
-3. **Audit provenance schema.** Replace the boolean `audited` with `audit: { auditor, reportUrl, scope, commitHash, date }`. Manifest carries the provenance. UI shows it.
-4. **End-to-end fill benchmark.** Add `test/benchmark/StopLossFill.benchmark.t.sol` that snapshots gas for `fillOrderArgs` on a stop-loss + gas-guard order, not just the predicate helper. Snapshot it in CI.
+All five P1 items are closed. See L1, L7, L8 above and the notes below.
 
-### P1 — Closes the "production-grade" gap
-
-5. **Maker traits as first-class DSL.** Expose `allowPartialFills`, `allowMultipleFills`, `expiration`, `nonce`, `privateTaker`, `permit2`, `epoch` as schema fields with cross-field validation (e.g. TWAP requires `allowPartialFills && allowMultipleFills`). The studio already validates some of this; lift it to schema-level.
-6. **Keeper documentation in the generated README.** For TWAP/DCA bundles, the auto-generated `README.generated.md` should include a "Liveness" section describing what off-chain process must call which method on what cadence, with reference Gelato / Chainlink Automation snippets.
-7. **TWAP + DCA on the codegen path.** Implement `compilePredicateTree` for getter-based templates and emit `IAmountGetter`-compatible Solidity. This is non-trivial — it requires modelling getters, not just predicates — but it's the difference between "4 templates" and "2 templates plus marketing."
-8. **Zip / tar bundle export.** Replace the `.txt` concatenation with a `.zip` containing `foundry.toml`, `src/`, `test/`, `script/`, `README.generated.md`, `manifest.json`.
-9. **`OR` / `NOT` predicate primitives.** Add to `lop-sdk` and the canvas. The codegen already has the data structure (`mode: "and" | "single"`); broaden to `"and" | "or" | "not" | "single"`.
+5. **Maker traits as first-class DSL.** *Resolved.* `orderSchema` exposes `allowPartialFills`, `allowMultipleFills`, `usePermit2`, `unwrapWeth`, `nonce`, `series`, `expiration`, `privateTaker`; `superRefine` enforces the TWAP `allowPartialFills && allowMultipleFills` constraint; `lop-sdk/src/maker-traits.ts` packs the real bit layout. (See L8.)
+6. **Keeper documentation in the generated README.** *Resolved.* `generateReadme` in `packages/codegen/src/templates.ts` emits a liveness section for TWAP and DCA bundles describing the off-chain keeper requirement (Chainlink Automation / Gelato / custom bots).
+7. **TWAP + DCA on the codegen path.** *Resolved.* `generateTwapSliceGetter` and `generateDcaRegistry` emit getter / series Solidity; both templates are `graphCodegenExecutable` and covered by `LopFillIntegration.t.sol`. (See L1.)
+8. **Zip bundle export.** *Resolved.* The studio exports a real `.zip` with directory structure preserved. (See L12.)
+9. **`OR` / `NOT` predicate primitives.** *Resolved.* `lop-sdk/src/predicates.ts` exports `buildOrPredicate` / `buildNotPredicate` and the graph `mode` enum is `single | and | or | not`. (See L7.)
 
 ### P2 — Quality of life and trust
 
@@ -256,4 +258,4 @@ If those five steps land, the project is what it claims. If any of them fail, th
 
 If I had to put this in one sentence to a 1inch product lead: *"It does the unsexy parts right (pinning, packing, salt, address registry, integration test) and stops short where it should (mainnet, orderbook submission, audit claim). The remaining work is well-scoped, not foundational."*
 
-The constructive way forward is the P0 list above — oracle hardening, real bytecode hash, audit provenance, fill-path benchmark — and then promoting TWAP/DCA from preview to first-class. With those done, this is a tool I'd be willing to point a partner at unprompted.
+The constructive way forward was the P0 list — oracle hardening, real bytecode hash, audit provenance, fill-path benchmark — followed by the P1 list: promoting TWAP/DCA to first-class, maker traits as DSL, keeper docs, `OR`/`NOT` primitives, zip export. **All of that is now done.** What remains (L4–L11) is genuine scope — orderbook submission, multichain integration coverage, persisted-state versioning — not foundational work. This is a tool I'd point a partner at unprompted.

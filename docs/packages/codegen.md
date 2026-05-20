@@ -126,13 +126,14 @@ interface ArtifactManifest {
     version: string;                // from TEMPLATE_CATALOG
     maturity: string;               // "draft" | "audit-ready" | ...
   };
+  audit?: AuditProvenance;          // structured audit provenance (mirrored from DSL)
   compiler: { solidity: "0.8.23" };
   lop: { version: "4.3.2"; chainId: number; address: string };
   generatedFiles: string[];         // every artifact path including manifest.json itself
   graph: StrategyGraph | null;      // the visual graph if the DSL carried one
   compiledPredicateTree: CompiledPredicateTree;
   extensionHash: string;
-  bytecodeHash: string | null;      // currently always null — see L2 in 1inch-review
+  bytecodeHash: string;             // keccak256 hash of compiled runtime bytecode (loaded from bytecode-hashes.json)
   warnings: string[];               // from validateExtensionTraits
   testCommandResults: {
     tests: "not-run" | "pass" | "fail";
@@ -148,7 +149,6 @@ interface ArtifactManifest {
 
 ### What's missing (intentional, documented)
 
-- `bytecodeHash` is `null`. The contract isn't compiled inside codegen; the wizard runs `forge build` separately. Filling this from a deterministic compile is P0 in the [1inch review](../1inch-review.md#p0--mandatory-before-mainnet-claims).
 - `testCommandResults` is `"not-run"` at codegen time. The wizard / CI fills these by re-emitting the manifest after running `forge test` / `forge snapshot`.
 
 ---
@@ -180,13 +180,34 @@ These are the four contracts codegen renders. Each one mirrors a contract alread
 
 ```solidity
 contract StopLossStrategy {
-    function checkPrice(address oracle, uint256 threshold, bool directionAbove)
-        external view returns (uint256)
-    {
-        int256 answer = IPriceOracle(oracle).latestAnswer();
-        require(answer > 0, "invalid oracle answer");
+    error InvalidAnswer();
+    error IncompleteRound(uint80 roundId, uint80 answeredInRound, uint256 updatedAt);
+    error StaleAnswer(uint256 updatedAt, uint256 nowTs, uint256 staleAfter);
+    error DecimalsMismatch(uint8 actual, uint8 expected);
+
+    function checkPrice(
+        address oracle,
+        uint256 threshold,
+        bool directionAbove,
+        uint256 staleAfter,
+        uint8 expectedDecimals
+    ) external view returns (uint256) {
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) =
+            IPriceOracle(oracle).latestRoundData();
+        if (answer <= 0) revert InvalidAnswer();
+        if (updatedAt == 0 || answeredInRound < roundId) {
+            revert IncompleteRound(roundId, answeredInRound, updatedAt);
+        }
+        if (block.timestamp > updatedAt && block.timestamp - updatedAt > staleAfter) {
+            revert StaleAnswer(updatedAt, block.timestamp, staleAfter);
+        }
+        uint8 actualDecimals = IPriceOracle(oracle).decimals();
+        if (actualDecimals != expectedDecimals) {
+            revert DecimalsMismatch(actualDecimals, expectedDecimals);
+        }
         uint256 price = uint256(answer);
-        return (directionAbove ? price > threshold : price < threshold) ? 1 : 0;
+        bool ok = directionAbove ? price > threshold : price < threshold;
+        return ok ? 1 : 0;
     }
 }
 ```

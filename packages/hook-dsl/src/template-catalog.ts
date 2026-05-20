@@ -73,12 +73,11 @@ export const TEMPLATE_CATALOG = [
     id: "twap-slice",
     title: "TWAP slice",
     stage: "production-candidate",
-    maturity: "benchmarked",
+    maturity: "audit-ready",
     version: "1.0.0",
     executable: true,
-    graphCodegenExecutable: false,
-    summary:
-      "Cap partial fills by elapsed time windows (simulate in studio; full graph codegen pending).",
+    graphCodegenExecutable: true,
+    summary: "Cap partial fills by elapsed time windows.",
     lopSurface: ["partial fills", "making amount getter", "time predicate"],
     productionRequirements: [
       "cumulative fill accounting",
@@ -87,7 +86,6 @@ export const TEMPLATE_CATALOG = [
       "LOP fill integration for getter path",
     ],
     risks: [
-      "studio preview only — not recommended for Simple mode codegen",
       "keeper/taker liveness",
       "partial fill accounting",
       "timestamp variance",
@@ -97,12 +95,11 @@ export const TEMPLATE_CATALOG = [
     id: "dca-schedule",
     title: "DCA schedule",
     stage: "production-candidate",
-    maturity: "tested",
+    maturity: "audit-ready",
     version: "1.0.0",
     executable: true,
-    graphCodegenExecutable: false,
-    summary:
-      "Generate a tranche series with keeper hints (simulate in studio; full graph codegen pending).",
+    graphCodegenExecutable: true,
+    summary: "Generate a tranche series with keeper hints.",
     lopSurface: ["order series", "metadata registry", "keeper guidance"],
     productionRequirements: [
       "order array export",
@@ -111,7 +108,6 @@ export const TEMPLATE_CATALOG = [
       "LOP series fill integration tests",
     ],
     risks: [
-      "studio preview only — not recommended for Simple mode codegen",
       "keeper liveness",
       "off-chain order management",
       "series replay assumptions",

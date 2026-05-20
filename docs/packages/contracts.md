@@ -78,14 +78,17 @@ These are the contracts deployed by makers (or partners) and called by LOP via `
 
 ```solidity
 contract StopLossStrategy {
-  function checkPrice(address oracle, uint256 threshold, bool directionAbove)
-    external view returns (uint256);
+  function checkPrice(
+    address oracle,
+    uint256 threshold,
+    bool directionAbove,
+    uint256 staleAfter,
+    uint8 expectedDecimals
+  ) external view returns (uint256);
 }
 ```
 
-Reads `IPriceOracle.latestAnswer()`, reverts on non-positive answers, returns `1` if the directional comparison passes, `0` otherwise. LOP's predicate convention treats non-zero as pass.
-
-> **L3 caveat:** does *not* check `updatedAt`, `answeredInRound`, decimals, or aggregator address allowlist. Production hardening is P0 in the [1inch review](../1inch-review.md#l3--stop-loss-assumes-ideal-oracle-behavior).
+Reads the latest aggregator data from the oracle via `latestRoundData()`, asserts that the answer is positive and not stale (within `staleAfter` seconds), verifies that the round is complete, and checks that the oracle's decimals match `expectedDecimals` on-chain before executing the comparison. Returns `1` if the directional comparison passes, `0` otherwise. LOP's predicate convention treats non-zero as pass.
 
 ### `GasGuardStrategy`
 
@@ -135,7 +138,7 @@ On-chain metadata for off-chain DCA orders. A keeper or UI looks up series param
 - `NaiveGasChecker` — does the same `block.basefee <= maxBaseFee` check but lives in a separate contract, so a cross-contract benchmark surfaces the cost of an external call.
 - `NaiveStopLossChecker` — same idea for stop-loss.
 
-> **L9 caveat:** these are *helper-level* benchmarks. They don't measure `LimitOrderProtocol.fillOrderArgs` gas with the predicate in-line. Fill-path benchmarking is P0.
+We also have a full end-to-end fill-path benchmark (`test/benchmark/StopLossFill.benchmark.t.sol`) which measures gas consumption of `LimitOrderProtocol.fillOrderArgs` with both stop-loss and gas-guard predicates active.
 
 ---
 
@@ -171,7 +174,13 @@ This file is what proves the studio's promised extension format actually fills.
 
 ### Benchmark (`test/benchmark/`)
 
-`forge snapshot`-friendly tests. Each file runs the optimised template once and the naive baseline once; `forge snapshot --check` compares gas against `.gas-snapshot` to detect regressions.
+`forge snapshot`-friendly tests. Each file runs the optimised template once and the naive baseline once, or measures complete LOP execution paths:
+
+- `GasGuard.benchmark.t.sol` — compares optimized gas guard strategy against the naive check.
+- `StopLoss.benchmark.t.sol` — compares optimized stop loss strategy against the naive check.
+- `StopLossFill.benchmark.t.sol` — **the end-to-end fill benchmark.** Measure `fillOrderArgs` gas consumption on a stop-loss + gas-guard extension.
+
+`forge snapshot --check` compares gas against `.gas-snapshot` to detect regressions.
 
 ```bash
 forge snapshot --match-path "test/benchmark/*"

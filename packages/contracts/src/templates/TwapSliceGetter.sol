@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+import {IAmountGetter} from "limit-order-protocol/interfaces/IAmountGetter.sol";
+import {IOrderMixin} from "limit-order-protocol/interfaces/IOrderMixin.sol";
+
 /// @title TwapSliceGetter — Limit Canvas template
 /// @notice Caps cumulative making amount by elapsed TWAP slices
-contract TwapSliceGetter {
+contract TwapSliceGetter is IAmountGetter {
   uint256 public immutable totalAmount;
   uint256 public immutable sliceAmount;
   uint256 public immutable intervalSeconds;
@@ -25,9 +28,36 @@ contract TwapSliceGetter {
     return allowed;
   }
 
-  function getMakingAmount(uint256 requestedMaking, uint256 remainingMaking, bytes32) external view returns (uint256) {
+  error ExceedsTwapCappedAmount();
+
+  function getMakingAmount(
+    IOrderMixin.Order calldata order,
+    bytes calldata /* extension */,
+    bytes32 /* orderHash */,
+    address /* taker */,
+    uint256 takingAmount,
+    uint256 remainingMakingAmount,
+    bytes calldata /* extraData */
+  ) external view override returns (uint256) {
     uint256 cap = maxMakingAmountNow();
-    uint256 maxFill = cap > remainingMaking ? remainingMaking : cap;
-    return requestedMaking > maxFill ? maxFill : requestedMaking;
+    uint256 maxFill = cap > remainingMakingAmount ? remainingMakingAmount : cap;
+    uint256 requestedMaking = (takingAmount * order.makingAmount) / order.takingAmount;
+    if (requestedMaking > maxFill) revert ExceedsTwapCappedAmount();
+    return requestedMaking;
+  }
+
+  function getTakingAmount(
+    IOrderMixin.Order calldata order,
+    bytes calldata /* extension */,
+    bytes32 /* orderHash */,
+    address /* taker */,
+    uint256 makingAmount,
+    uint256 remainingMakingAmount,
+    bytes calldata /* extraData */
+  ) external view override returns (uint256) {
+    uint256 cap = maxMakingAmountNow();
+    uint256 maxFill = cap > remainingMakingAmount ? remainingMakingAmount : cap;
+    if (makingAmount > maxFill) revert ExceedsTwapCappedAmount();
+    return (makingAmount * order.takingAmount + order.makingAmount - 1) / order.makingAmount;
   }
 }

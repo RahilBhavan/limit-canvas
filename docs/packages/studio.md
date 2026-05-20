@@ -266,7 +266,7 @@ Tokens:
 
 **Rules:**
 
-- Mono font (`Geist Mono`) used only for hashes, addresses, numeric labels, and field labels. Body text is `Inter`.
+- Mono font (`JetBrains Mono`) used only for hashes, addresses, numeric labels, and field labels. Body text is `Inter`.
 - One accent only. No purple, no teal, no gradient ramps — `--accent` carries every "this is interactive / primary / on-task" signal.
 - Hairlines are alpha-only, never opaque grey. This is what gives the dark surfaces depth without looking like a 2015 dashboard.
 - Status colors (`ok`, `warn`, `bad`) used both as foreground (`color:`) and as `*-soft` background tints. Never together at full opacity.
@@ -408,5 +408,5 @@ The gallery reads from `TEMPLATES` in `lib/templates.ts`, which mirrors `TEMPLAT
 - [`lop-sdk`](./lop-sdk.md) — extension packing and salt invariant the wizard surfaces.
 - [`codegen`](./codegen.md) — generates the bundle the Ship phase exports.
 - [`packages/contracts`](./contracts.md) — Foundry harness; the wizard calls `forge test` here.
-- [`docs/1inch-review.md`](../1inch-review.md) — reviewer-perspective limitations, especially the bytecode-hash and audit-provenance gaps.
+- [`docs/1inch-review.md`](../1inch-review.md) — reviewer-perspective limitations, including completed P0 items (oracle safety checks, bytecode hashes, audit provenance, and fill benchmarks).
 - [`docs/plan/02-v1-scope.md`](../plan/02-v1-scope.md) — what the wizard intentionally does *not* do (e.g. orderbook submission).

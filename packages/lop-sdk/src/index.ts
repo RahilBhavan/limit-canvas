@@ -2,9 +2,14 @@ export {
   buildSaltWithExtension,
   computeExtensionHash,
   packPredicateOnlyExtension,
+  packExtension,
+  type ExtensionFields,
 } from "./extension.js";
+export { packMakerTraits } from "./maker-traits.js";
 export {
   buildAndPredicate,
+  buildOrPredicate,
+  buildNotPredicate,
   buildCompareGt,
   buildCompareLt,
   buildGasGuardPredicate,

@@ -26,6 +26,10 @@ export const orderSchema = z.object({
   takingAmount: z.string().regex(/^\d+$/),
   allowPartialFills: z.boolean().default(true),
   allowMultipleFills: z.boolean().default(false),
+  usePermit2: z.boolean().default(false),
+  unwrapWeth: z.boolean().default(false),
+  nonce: z.string().regex(/^\d+$/).default("0"),
+  series: z.string().regex(/^\d+$/).default("0"),
   expiration: z.number().int().nonnegative().optional(),
   privateTaker: address.optional(),
 });
@@ -91,7 +95,7 @@ export const strategyGraphSchema = z.object({
   edges: z.array(strategyGraphEdgeSchema),
   compiledPredicate: z
     .object({
-      mode: z.enum(["single", "and"]),
+      mode: z.enum(["single", "and", "or", "not"]),
       rootNodeIds: z.array(z.string().min(1)),
     })
     .optional(),
@@ -143,6 +147,13 @@ export const strategyDocumentSchema = z
         code: z.ZodIssueCode.custom,
         message: "twap-slice requires allowPartialFills",
         path: ["order", "allowPartialFills"],
+      });
+    }
+    if (doc.templateId === "twap-slice" && !doc.order.allowMultipleFills) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "twap-slice requires allowMultipleFills",
+        path: ["order", "allowMultipleFills"],
       });
     }
   });

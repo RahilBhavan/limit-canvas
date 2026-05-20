@@ -66,12 +66,25 @@ Re-exported from `@limit-canvas/hook-dsl`:
   version: "1.0.0"          // literal
   templateId: TemplateId    // discriminator
   name: string              // 1..128 chars
-  audited: boolean          // default false — required true for mainnet gate
+  audited: boolean          // default false — legacy boolean for mainnet gate
+  audit?: AuditProvenance   // structured audit evidence (required for mainnet)
   network: NetworkConfig
   order: OrderConfig
   block: TemplateBlock      // discriminated by `type`, must match templateId
   predicateCalldata?: hex   // filled by codegen / SDK, not by users
   graph?: StrategyGraph     // optional visual graph metadata
+}
+```
+
+### `AuditProvenance`
+
+```ts
+{
+  auditor: string           // 1..128 chars
+  reportUrl: string         // must be valid URL
+  scope: string             // 1..512 chars
+  commitHash: string        // 7..64 hex characters
+  date: string              // YYYY-MM-DD format
 }
 ```
 
@@ -113,7 +126,7 @@ Amounts are **strings of digits**, not `bigint` or `number`, because they cross 
 
 | Block type | Fields |
 |---|---|
-| `stop-loss` | `oracle: 0x[40]`, `threshold: string-of-digits`, `direction: "above" \| "below"` |
+| `stop-loss` | `oracle: 0x[40]`, `threshold: string-of-digits`, `direction: "above" \| "below"`, `staleAfter: positive number (seconds)`, `decimals: non-negative int` |
 | `gas-guard` | `maxGwei: positive number` |
 | `twap-slice` | `totalAmount`, `sliceAmount` (string of digits), `intervalSeconds: positive int`, `startTime: non-negative int` |
 | `dca-schedule` | `tranches: int 2..52`, `amountPerTranche: string of digits`, `intervalSeconds: positive int`, `seriesId: non-negative int (default 0)` |
@@ -178,7 +191,7 @@ Current catalog (truncated):
 - `draft` → `tested`: unit tests pass against the template Solidity helper.
 - `tested` → `benchmarked`: gas snapshot exists with a baseline.
 - `benchmarked` → `audit-ready`: fuzz coverage + LOP fill integration test + DSL determinism test.
-- `audit-ready` → `mainnet-enabled`: external audit provenance landed in the manifest (see [the 1inch-review limitations list](../1inch-review.md#l6--audited-is-a-single-boolean) — this gate is not yet enforced beyond a boolean).
+- `audit-ready` → `mainnet-enabled`: external audit provenance landed in the manifest (the structured `audit` metadata block containing auditor, reportUrl, scope, commitHash, and date is fully populated).
 
 ---
 
@@ -193,6 +206,7 @@ Current rules (`validate.ts`):
 | `templateId ∈ {gas-guard, stop-loss}` ∧ no `predicateCalldata` | `"Predicate calldata not set — run codegen or lop-sdk packer."` |
 | `templateId === "dca-schedule"` | `"DCA emits N orders — off-chain keeper required (see README.generated.md)."` |
 | `network.chainId === 1` ∧ `audited === false` | `"mainnet deploy blocked until audited: true in DSL."` |
+| `audited === true` ∧ no `audit` | `"audited: true is set without an \`audit\` provenance object (auditor, reportUrl, scope, commitHash, date). The boolean form is deprecated for mainnet."` |
 
 `validateExtensionTraits` is the right place to add new soft checks (oracle freshness, traits mismatches, etc.). Keep hard validation in the Zod schema.
 

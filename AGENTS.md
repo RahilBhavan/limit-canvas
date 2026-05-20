@@ -133,7 +133,7 @@ If any task conflicts with these, flag it before proceeding.
 
 - Active product repo in this workspace is `limit-canvas/`: Bun monorepo with Next.js 15 studio at `apps/studio/`.
 - Studio composer exposes three UI modes: Simple (default), Standard, and JSON/advanced.
-- Production-ready codegen templates are `stop-loss` and `gas-guard`; `twap-slice` and `dca-schedule` are preview-only and should not be pushed as Simple-mode codegen paths.
+- All four templates (`stop-loss`, `gas-guard`, `twap-slice`, `dca-schedule`) are first-class on the codegen path at `audit-ready` maturity, each with unit + fuzz + integration + benchmark tests.
 - Human-friendly inputs live in `apps/studio/src/lib/human-units.ts` (USD price, gas presets); plain-language summaries in `apps/studio/src/lib/strategy-summary.ts`.
 - Studio nav is Compose, Verify (`/test`), and Deploy; a known UX issue is duplicate preflight surfaces (summary, status cards, mainnet progress, readiness list) competing with the workflow rail and mode tabs.
 - Accepted simplification direction: collapse preflight in Simple mode, wire workflow steps to panel visibility, and prefer outcome-first simulation copy over raw technical fields up front.

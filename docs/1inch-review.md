@@ -46,11 +46,11 @@ These are the things I look for to decide whether a partner project is "actually
 
 5. **Chain registry matches our public docs.** `LOP_REGISTRY` in `packages/lop-sdk/src/registry.ts` matches the canonical `0x111111125421ca6dc452d289314280a0f8842a65` deployment across Ethereum / Optimism / BSC / Gnosis / Polygon / Base / Arbitrum / Avalanche / Sepolia, plus the zkSync-Era exception. The UI surfaces "LOP address" as a readiness gate.
 
-6. **Manifest is reproducible and useful.** Every generated bundle includes `dslHash`, `template.{id,version,maturity}`, `compiler.solidity`, `lop.{version,chainId,address}`, `compiledPredicateTree`, `extensionHash`, `bytecodeHash` placeholder, warnings, and a `testCommandResults` slot. A partner can diff two manifests and know whether anything material changed.
+6. **Manifest is reproducible and useful.** Every generated bundle includes `dslHash`, `template.{id,version,maturity}`, `compiler.solidity`, `lop.{version,chainId,address}`, `compiledPredicateTree`, `extensionHash`, a real compiled-runtime `bytecodeHash`, warnings, and a `testCommandResults` slot. A partner can diff two manifests and know whether anything material changed.
 
 7. **Mainnet is intentionally gated.** The readiness panel exposes five gates (template maturity, LOP address verified, warnings clear, hashes reviewed, explicit confirmation), and mainnet is blocked unless all pass. `audited: true` is described conservatively in docs: it means "this template implementation was reviewed," not "your strategy is safe."
 
-8. **The UI doesn't lie about what it's doing.** There is no fake AI branding. Preview-only templates (`twap-slice`, `dca-schedule`) are labelled as such on the template card. Demo mode preloads a known-good configuration rather than pretending the user assembled it.
+8. **The UI doesn't lie about what it's doing.** There is no fake AI branding. Every template card shows its catalog `maturity` honestly, and research-only catalog entries (oracle band, deadline window, private taker, Dutch auction) are surfaced as non-executable. Demo mode preloads a known-good configuration rather than pretending the user assembled it.
 
 ---
 

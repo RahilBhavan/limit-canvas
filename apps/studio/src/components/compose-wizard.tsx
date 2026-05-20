@@ -14,6 +14,7 @@ import { OnboardingOverlay } from "@/components/onboarding-overlay";
 import { PreflightPanel } from "@/components/preflight-panel";
 import { SimulationPanel } from "@/components/simulation-panel";
 import { TemplateGallery } from "@/components/template-gallery";
+import type { UiMode } from "@/lib/composer-types";
 import { defaultDocument } from "@/lib/default-dsl";
 import {
   loadPersistedState,
@@ -39,6 +40,7 @@ import { TEMPLATES, isGraphCodegenTemplate } from "@/lib/templates";
 import { connectMakerAddress } from "@/lib/wallet";
 import { generateArtifacts } from "@limit-canvas/codegen";
 import type { StrategyDocument, TemplateId } from "@limit-canvas/hook-dsl";
+import { strToU8, zipSync } from "fflate";
 import {
   type ReactNode,
   useCallback,
@@ -94,6 +96,7 @@ export function ComposeWizard({
   );
   const [addons, setAddons] = useState<StrategyAddonState>(DEFAULT_ADDONS);
   const [phase, setPhase] = useState<Phase>(initialPhase ?? "build");
+  const [uiMode, setUiMode] = useState<UiMode>("simple");
   const [dock, setDock] = useState<Dock>("simulate");
   const [activeInspector, setActiveInspector] =
     useState<CanvasInspectTarget>("condition");
@@ -191,6 +194,7 @@ export function ComposeWizard({
       setSimulationInput(saved.simulationInput);
       setOnboardingOpen(!saved.onboardingDone);
       setPhase(initialPhase ?? phaseFromLegacyStep(saved.workflowStep));
+      setUiMode(saved.uiMode ?? "simple");
     } else {
       syncDoc(defaultDocument(templateId));
       setOnboardingOpen(true);
@@ -206,11 +210,11 @@ export function ComposeWizard({
       addons,
       simulationInput,
       copilotPrompt: "",
-      uiMode: "simple",
+      uiMode,
       workflowStep: legacyStepFromPhase(phase),
       onboardingDone: !onboardingOpen,
     });
-  }, [hydrated, doc, addons, simulationInput, phase, onboardingOpen]);
+  }, [hydrated, doc, addons, simulationInput, phase, onboardingOpen, uiMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -371,29 +375,44 @@ export function ComposeWizard({
     }));
   };
 
-  const downloadBundle = () => {
-    const bundle = artifacts
-      .map((a) => `// ${a.path}\n${a.content}`)
-      .join("\n\n");
-    const blob = new Blob([bundle], { type: "text/plain" });
+  const triggerDownload = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${doc.templateId}-artifacts.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const downloadBundle = () => {
+    if (artifacts.length === 0) return;
+    try {
+      const files: Record<string, Uint8Array> = {};
+      for (const a of artifacts) {
+        files[a.path] = strToU8(a.content);
+      }
+      const zipped = zipSync(files);
+      triggerDownload(
+        new Blob([zipped], { type: "application/zip" }),
+        `${doc.templateId}-strategy-bundle.zip`,
+      );
+    } catch (e) {
+      setError(
+        `Bundle export failed. ${e instanceof Error ? e.message : "Could not build the zip."}`,
+      );
+    }
   };
 
   const downloadManifest = () => {
     const m = artifacts.find((a) => a.path === "manifest.json");
     if (!m) return;
-    const blob = new Blob([m.content], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "manifest.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(
+      new Blob([m.content], { type: "application/json" }),
+      "manifest.json",
+    );
   };
 
   const runDemoMode = () => {
@@ -456,6 +475,18 @@ export function ComposeWizard({
           </span>
         </div>
         <div className="topbar-actions">
+          <div className="ui-mode-switcher" role="group" aria-label="UI Mode">
+            {(["simple", "standard", "advanced"] as const).map((mode) => (
+              <button
+                type="button"
+                key={mode}
+                className={`mode-btn ${uiMode === mode ? "active" : ""}`}
+                onClick={() => setUiMode(mode)}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
           <button type="button" className="ghost-button" onClick={runDemoMode}>
             Run demo
           </button>
@@ -474,7 +505,7 @@ export function ComposeWizard({
 
       <PhaseRail current={phase} onSelect={goToPhase} />
 
-      <div className="composer-grid">
+      <div className={`composer-grid mode-${uiMode} phase-${phase}`}>
         <section ref={controlsRef} className="panel controls-panel">
           <PanelHeading
             title="Strategy"
@@ -546,6 +577,7 @@ export function ComposeWizard({
                 simulation={simulation}
                 timeline={timeline}
                 predicatePreview={predicatePreview}
+                uiMode={uiMode}
               />
             )}
             {dock === "extension" && (
@@ -582,6 +614,7 @@ export function ComposeWizard({
             extensionHash={preview?.hash ?? "pending"}
             bytecodeHash={preview?.bytecodeHash ?? null}
             makerTraits={makerTraitsLabel(extension !== "0x")}
+            uiMode={uiMode}
             onRunChecks={handleProofChecks}
             onGenerate={handleGenerate}
             onExport={() => goToPhase("ship")}
@@ -980,6 +1013,68 @@ function OrderDetailsForm({
           }))
         }
       />
+      <TextField
+        label="Nonce"
+        value={doc.order.nonce ?? "0"}
+        onChange={(nonce) =>
+          updateDoc((c) => ({
+            ...c,
+            order: { ...c.order, nonce },
+          }))
+        }
+      />
+      <TextField
+        label="Series"
+        value={doc.order.series ?? "0"}
+        onChange={(series) =>
+          updateDoc((c) => ({
+            ...c,
+            order: { ...c.order, series },
+          }))
+        }
+      />
+      <div className="toggle-group col-span-2">
+        <ToggleField
+          label="Allow partial fills"
+          checked={doc.order.allowPartialFills ?? true}
+          onChange={(allowPartialFills) =>
+            updateDoc((c) => ({
+              ...c,
+              order: { ...c.order, allowPartialFills },
+            }))
+          }
+        />
+        <ToggleField
+          label="Allow multiple fills"
+          checked={doc.order.allowMultipleFills ?? true}
+          onChange={(allowMultipleFills) =>
+            updateDoc((c) => ({
+              ...c,
+              order: { ...c.order, allowMultipleFills },
+            }))
+          }
+        />
+        <ToggleField
+          label="Use Permit2"
+          checked={doc.order.usePermit2 ?? false}
+          onChange={(usePermit2) =>
+            updateDoc((c) => ({
+              ...c,
+              order: { ...c.order, usePermit2 },
+            }))
+          }
+        />
+        <ToggleField
+          label="Unwrap WETH"
+          checked={doc.order.unwrapWeth ?? false}
+          onChange={(unwrapWeth) =>
+            updateDoc((c) => ({
+              ...c,
+              order: { ...c.order, unwrapWeth },
+            }))
+          }
+        />
+      </div>
     </div>
   );
 }

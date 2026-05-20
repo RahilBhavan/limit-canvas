@@ -81,12 +81,9 @@ limit-canvas/
 **Sprint goal:** Portfolio-grade polish on the gas-safe stop-loss story (visual canvas → manifest → proof).
 **My current focus:** Reviewer-friendliness — README, code tour, in-app onboarding, plain-language strategy review.
 **Active tasks:** Onboarding overlay clarity; `CODE_TOUR.md` surfacing the load-bearing files; README hook + diagram.
-**Release-blocker P0 status:**
-- Oracle hardening — done (staleness, decimals, round-completeness, allowlist warning, integration tests)
-- Real bytecode hash — done (committed snapshot from forge, metadata-stripped, manifest + readiness gate)
-- Audit-provenance schema — done (`audit: { auditor, reportUrl, scope, commitHash, date }`, manifest + UI surface)
-- Fill-path benchmark — done (`test/benchmark/StopLossFill.benchmark.t.sol`, CI snapshot check)
-**Remaining for release:** P1 items in [`docs/1inch-review.md`](docs/1inch-review.md) — maker traits as first-class DSL, keeper docs, TWAP/DCA on codegen, zip export, OR/NOT primitives.
+**Release-blocker P0 status:** all four closed — oracle hardening, real bytecode hash, audit-provenance schema, fill-path benchmark.
+**P1 production-gap status:** all five closed — maker traits as first-class DSL, keeper docs in generated README, TWAP/DCA on the codegen path, zip bundle export, `OR`/`NOT` predicate primitives.
+**Remaining (deliberate scope, see L4–L11 in `docs/1inch-review.md`):** orderbook submission pipeline, multichain integration coverage, persisted-state versioning.
 
 ---
 

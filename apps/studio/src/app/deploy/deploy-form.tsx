@@ -30,16 +30,16 @@ export function DeployForm() {
   return (
     <>
       {fromComposer && (
-        <p className="mb-4 rounded-lg border border-[var(--hairline)] bg-[var(--canvas-card)] px-3 py-2 text-sm text-gray-300">
+        <p className="mb-4 rounded-lg border border-[var(--hairline)] bg-[var(--canvas-card)] px-3 py-2 text-sm text-[var(--body)]">
           Template from composer: <strong>{fromComposer}</strong>
         </p>
       )}
 
-      <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+      <div className="space-y-4 rounded-xl border border-[var(--hairline)] bg-[var(--canvas-card)] p-4">
         <label className="block text-sm">
           Environment
           <select
-            className="mt-1 w-full rounded border border-[var(--border)] bg-black/40 p-2"
+            className="mt-1 w-full rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-2"
             value={profile}
             onChange={(e) =>
               setProfile(e.target.value as (typeof PROFILES)[number])
@@ -56,7 +56,7 @@ export function DeployForm() {
         <label className="block text-sm">
           Template
           <select
-            className="mt-1 w-full rounded border border-[var(--border)] bg-black/40 p-2"
+            className="mt-1 w-full rounded border border-[var(--hairline)] bg-[var(--canvas-soft)] p-2"
             value={templateId}
             onChange={(e) => setTemplateId(e.target.value)}
           >
@@ -70,7 +70,7 @@ export function DeployForm() {
 
         {profile === "mainnet" && (
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm text-amber-400">
+            <label className="flex items-center gap-2 text-sm text-[var(--warn)]">
               <input
                 type="checkbox"
                 checked={extensionReviewed}
@@ -78,7 +78,7 @@ export function DeployForm() {
               />
               Extension hash reviewed
             </label>
-            <label className="flex items-center gap-2 text-sm text-amber-400">
+            <label className="flex items-center gap-2 text-sm text-[var(--warn)]">
               <input
                 type="checkbox"
                 checked={confirmed}
@@ -89,7 +89,7 @@ export function DeployForm() {
           </div>
         )}
 
-        <pre className="rounded bg-black/50 p-3 font-mono text-xs text-gray-400">
+        <pre className="rounded bg-[var(--canvas-soft)] p-3 font-mono text-xs text-[var(--body-mid)]">
           {`cd packages/contracts
 export DEPLOYER_KEY=0x...
 export RPC_URL=...
@@ -97,7 +97,7 @@ FOUNDRY_PROFILE=${profile} forge script script/Deploy${scriptName(templateId)}.s
         </pre>
 
         {mainnetBlocked && (
-          <p className="text-sm text-red-400">
+          <p className="text-sm text-[var(--bad)]">
             Mainnet blocked: template maturity must be audit-ready or above and
             both confirmations must be checked.
           </p>

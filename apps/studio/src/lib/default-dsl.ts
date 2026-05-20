@@ -18,6 +18,10 @@ export function defaultDocument(templateId: TemplateId): StrategyDocument {
       takingAmount: "2000000000000000000",
       allowPartialFills: templateId === "twap-slice",
       allowMultipleFills: templateId === "twap-slice",
+      usePermit2: false,
+      unwrapWeth: false,
+      nonce: "0",
+      series: "0",
     },
   };
 

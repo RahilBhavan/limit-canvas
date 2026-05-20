@@ -37,7 +37,7 @@ export interface SimulationInput {
 
 /** Compiled predicate metadata shown in simulation when codegen is available. */
 export interface PredicatePreview {
-  mode: "single" | "and";
+  mode: "single" | "and" | "or" | "not";
   root: string;
   extensionHash: string;
   nodeCount: number;

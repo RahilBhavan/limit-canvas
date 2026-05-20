@@ -52,7 +52,7 @@ export function ExportPanel({
           disabled={!hasBundle}
           onClick={onDownloadBundle}
         >
-          Download bundle (.txt)
+          Download bundle (.zip)
         </button>
         <button
           type="button"

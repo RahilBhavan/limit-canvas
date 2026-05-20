@@ -65,7 +65,9 @@ That's the whole pitch: **compose visually, see why it fills or doesn't, ship th
 | Salt's low 160 bits == `keccak256(extension)` low 160 bits | [`extension.test.ts`](packages/lop-sdk/src/extension.test.ts) + Solidity mirror in `LopOrderTestLib.saltFromExtension` |
 | Predicate composition uses `PredicateHelper.and` | [`predicates.ts::buildAndPredicate`](packages/lop-sdk/src/predicates.ts) (offsets-packed; decode round-trip tested) |
 | LOP address matches official registry across 10 chains | [`registry.ts`](packages/lop-sdk/src/registry.ts) — surfaced as a readiness gate in the UI |
-| Same DSL → byte-identical artifacts | `dslHash` in [`generate.ts`](packages/codegen/src/generate.ts); asserted in `generate.test.ts` |
+| Same DSL → byte-identical artifacts | `dslHash` in [`generate.ts`](packages/codegen/src/generate.ts) + output-side snapshots in [`examples.test.ts`](packages/codegen/src/examples.test.ts) |
+| Stop-loss reverts on stale / incomplete / wrong-decimals oracle data | `StopLossStrategy.checkPrice` + negative tests in [`StopLossStrategy.t.sol`](packages/contracts/test/unit/StopLossStrategy.t.sol) and [`LopFillIntegration.t.sol`](packages/contracts/test/integration/LopFillIntegration.t.sol) |
+| `manifest.bytecodeHash` is a real compiled runtime hash, not a placeholder | [`snapshot-bytecode-hashes.ts`](packages/codegen/scripts/snapshot-bytecode-hashes.ts) — keccak of `deployedBytecode`, metadata-stripped via `foundry.toml`; CI re-verifies |
 | Mainnet is gated, not aspirational | Readiness checks + explicit confirmations in [`preflight-panel.tsx`](apps/studio/src/components/preflight-panel.tsx); CLI refuses unless the template's catalog `maturity` is `audit-ready`+ AND the DSL has `audited: true` (set `FOUNDRY_PROFILE=mainnet`) |
 
 ---
@@ -114,17 +116,17 @@ bun run bench                  # gas snapshots
 
 ## Template library
 
-**Executable (full codegen + graph compose + integration test):**
+**Executable — full DSL → Solidity → manifest codegen, graph compose, and a Foundry fill test:**
 
+- `stop-loss` — oracle price predicate with staleness / round-completeness / decimals guards (powers the `gas-safe stop-loss` hero demo: `AND(stop-loss, gas-guard)`)
 - `gas-guard` — base-fee predicate
-- `stop-loss` — oracle price predicate (powers the `gas-safe stop-loss` hero demo: `AND(stop-loss, gas-guard)`)
+- `twap-slice` — time-windowed partial-fill amount getter; the generated bundle ships keeper-liveness docs
+- `dca-schedule` — tranche order series with an on-chain metadata registry and keeper guidance
 
-**Preview (Solidity helpers + UI simulation; not on the graph codegen path yet):**
+All four are at `audit-ready` maturity with unit + fuzz + integration + benchmark tests, and all four
+generate through `packages/codegen` (`bun run codegen examples/<template>.json`).
 
-- `twap-slice`
-- `dca-schedule`
-
-**Visible / planned:**
+**Planned / research (visible in the catalog, not executable):**
 
 - Oracle band · Deadline window · Private taker / allowlist · Dutch auction (research-only)
 
@@ -141,11 +143,12 @@ bun run bench                  # gas snapshots
 
 ## Honest limitations
 
-Documented in detail in [docs/1inch-review.md](docs/1inch-review.md). Top three:
+The four P0 release-blockers and the P1 production-gap items from [docs/1inch-review.md](docs/1inch-review.md)
+are closed. The remaining limitations are deliberate scope boundaries, not unfinished work:
 
-- **Codegen coverage is narrow.** Only `stop-loss` and `gas-guard` have full DSL → Solidity → integration-test paths today.
-- **Stop-loss oracle is naive.** No staleness / round-completeness / decimals / aggregator-allowlist checks yet (P0 item).
-- **`bytecodeHash` is a placeholder.** Reserved in the manifest but not yet populated by a deterministic compile (P0 item).
+- **No Orderbook submission path.** The SDK produces the `POST /orderbook/v4.1` payload *shape*, but the studio never submits — auto-submitting signed orders is a much larger trust surface. A partner integrates their own submission pipeline.
+- **Single-chain integration coverage.** The chain registry covers 10 chains, but the LOP fill test and deploy scripts assume an EVM-mainnet-shape environment; zkSync-Era is not yet exercised by an integration test.
+- **Persisted studio state is unversioned across DSL changes.** `persisted-strategy.ts` falls back to the default on a schema mismatch rather than migrating saved strategies.
 
 ---
 

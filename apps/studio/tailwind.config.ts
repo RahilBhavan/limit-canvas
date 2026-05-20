@@ -10,6 +10,10 @@ const config: Config = {
           muted: "#7d8187",
         },
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
+      },
     },
   },
   plugins: [],

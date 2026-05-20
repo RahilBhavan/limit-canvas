@@ -31,13 +31,12 @@ export function getTemplate(id: string): TemplateMeta | undefined {
 export const PRODUCTION_READY_TEMPLATE_IDS = [
   "stop-loss",
   "gas-guard",
-] as const;
-
-/** Visible in UI but not recommended for Simple mode codegen. */
-export const PREVIEW_ONLY_TEMPLATE_IDS = [
   "twap-slice",
   "dca-schedule",
 ] as const;
+
+/** Visible in UI but not recommended for Simple mode codegen. */
+export const PREVIEW_ONLY_TEMPLATE_IDS = [] as const;
 
 export function isPreviewOnlyTemplate(id: string): boolean {
   return (PREVIEW_ONLY_TEMPLATE_IDS as readonly string[]).includes(id);

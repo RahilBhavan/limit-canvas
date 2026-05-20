@@ -1,5 +1,6 @@
 "use client";
 
+import type { UiMode } from "@/lib/composer-types";
 import type {
   PredicatePreview,
   SimulationInput,
@@ -19,6 +20,7 @@ interface SimulationPanelProps {
   simulation: ReturnType<typeof computeSimulation>;
   timeline: ReturnType<typeof simulationTimeline>;
   predicatePreview?: PredicatePreview | null;
+  uiMode?: UiMode;
 }
 
 export function SimulationPanel({
@@ -29,6 +31,7 @@ export function SimulationPanel({
   simulation,
   timeline,
   predicatePreview,
+  uiMode = "simple",
 }: SimulationPanelProps) {
   return (
     <section className="simulation-panel">
@@ -46,13 +49,15 @@ export function SimulationPanel({
         />
       </div>
       <div className="simulation-inputs">
-        <SimulationControls
-          doc={doc}
-          addons={addons}
-          input={input}
-          setInput={setInput}
-        />
-        {predicatePreview && (
+        {uiMode !== "simple" && (
+          <SimulationControls
+            doc={doc}
+            addons={addons}
+            input={input}
+            setInput={setInput}
+          />
+        )}
+        {uiMode !== "simple" && predicatePreview && (
           <div className="predicate-preview" aria-label="Compiled predicate">
             <span className="field-label">Compiled predicate</span>
             <code>{predicatePreview.root}</code>

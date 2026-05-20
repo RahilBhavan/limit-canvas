@@ -3,6 +3,7 @@
 import type { Phase } from "@/components/compose-wizard";
 import { MainnetGateProgress } from "@/components/mainnet-gate-progress";
 import { ProofStatusCards } from "@/components/proof-status-cards";
+import type { UiMode } from "@/lib/composer-types";
 import type { ProofStatus } from "@/lib/strategy-workstation";
 import type {
   ReadinessGateId,
@@ -47,6 +48,7 @@ interface PreflightPanelProps {
   onExport: () => void;
   onDeploy: () => void;
   onGateFix: (gateId: ReadinessGateId) => void;
+  uiMode: UiMode;
 }
 
 export function PreflightPanel({
@@ -73,6 +75,7 @@ export function PreflightPanel({
   onExport,
   onDeploy,
   onGateFix,
+  uiMode,
 }: PreflightPanelProps) {
   const proofGreen =
     proof.tests === "pass" && proof.fuzz === "pass" && proof.gas === "pass";
@@ -107,99 +110,107 @@ export function PreflightPanel({
         onDeploy={onDeploy}
       />
 
-      <MainnetGateProgress items={readiness} compact onGateFix={onGateFix} />
+      {uiMode !== "simple" && (
+        <>
+          <MainnetGateProgress
+            items={readiness}
+            compact
+            onGateFix={onGateFix}
+          />
 
-      <ExtensionHashCard extensionHash={extensionHash} />
+          <ExtensionHashCard extensionHash={extensionHash} />
 
-      <details ref={readinessRef} className="preflight-collapsed">
-        <summary>Advanced — proof, sign-off, review</summary>
-        <div className="preflight-advanced">
-          <section>
-            <h3 className="preflight-subheading">Proof</h3>
-            <ProofStatusCards proof={proof} lastRunAt={lastProofRunAt} />
-            <ProofEvidence
-              proof={proof}
-              warnings={warnings}
-              artifactsCount={artifactsCount}
-              lopVerified={lopVerified}
-              saltMatched={saltMatched}
-            />
-            <div className="hash-line-stack">
-              <HashLine label="extension" value={extensionHash} />
-              <HashLine
-                label="bytecode"
-                value={bytecodeHash ?? "generate artifacts first"}
-              />
-              <HashLine label="maker traits" value={makerTraits} />
+          <details ref={readinessRef} className="preflight-collapsed">
+            <summary>Advanced — proof, sign-off, review</summary>
+            <div className="preflight-advanced">
+              <section>
+                <h3 className="preflight-subheading">Proof</h3>
+                <ProofStatusCards proof={proof} lastRunAt={lastProofRunAt} />
+                <ProofEvidence
+                  proof={proof}
+                  warnings={warnings}
+                  artifactsCount={artifactsCount}
+                  lopVerified={lopVerified}
+                  saltMatched={saltMatched}
+                />
+                <div className="hash-line-stack">
+                  <HashLine label="extension" value={extensionHash} />
+                  <HashLine
+                    label="bytecode"
+                    value={bytecodeHash ?? "generate artifacts first"}
+                  />
+                  <HashLine label="maker traits" value={makerTraits} />
+                </div>
+              </section>
+
+              <section>
+                <h3 className="preflight-subheading">Sign-off</h3>
+                <div className="review-checks">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={reviewed.extensionHash}
+                      onChange={(event) =>
+                        setReviewed((current) => ({
+                          ...current,
+                          extensionHash: event.target.checked,
+                        }))
+                      }
+                    />
+                    Extension hash reviewed
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={reviewed.bytecodeHash}
+                      disabled={!bytecodeHash}
+                      onChange={(event) =>
+                        setReviewed((current) => ({
+                          ...current,
+                          bytecodeHash: event.target.checked,
+                        }))
+                      }
+                    />
+                    Bytecode hash reviewed
+                    {bytecodeHash ? (
+                      <code className="hash-inline">{bytecodeHash}</code>
+                    ) : (
+                      <span className="hash-pending">
+                        (run Generate to populate)
+                      </span>
+                    )}
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={reviewed.explicitConfirm}
+                      onChange={(event) =>
+                        setReviewed((current) => ({
+                          ...current,
+                          explicitConfirm: event.target.checked,
+                        }))
+                      }
+                    />
+                    Explicit mainnet confirmation
+                  </label>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="preflight-subheading">Strategy review</h3>
+                <ReviewList title="Fills when" items={review.fillsWhen} />
+                <ReviewList title="Fails when" items={review.failsWhen} />
+                <ReviewList title="Assumptions" items={review.assumptions} />
+                <ReviewList title="Risks" items={review.risks} />
+                <ReviewList
+                  title="Mainnet blockers"
+                  items={review.mainnetBlockers}
+                />
+              </section>
             </div>
-          </section>
-
-          <section>
-            <h3 className="preflight-subheading">Sign-off</h3>
-            <div className="review-checks">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={reviewed.extensionHash}
-                  onChange={(event) =>
-                    setReviewed((current) => ({
-                      ...current,
-                      extensionHash: event.target.checked,
-                    }))
-                  }
-                />
-                Extension hash reviewed
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={reviewed.bytecodeHash}
-                  disabled={!bytecodeHash}
-                  onChange={(event) =>
-                    setReviewed((current) => ({
-                      ...current,
-                      bytecodeHash: event.target.checked,
-                    }))
-                  }
-                />
-                Bytecode hash reviewed
-                {bytecodeHash ? (
-                  <code className="hash-inline">{bytecodeHash}</code>
-                ) : (
-                  <span className="hash-pending">
-                    (run Generate to populate)
-                  </span>
-                )}
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={reviewed.explicitConfirm}
-                  onChange={(event) =>
-                    setReviewed((current) => ({
-                      ...current,
-                      explicitConfirm: event.target.checked,
-                    }))
-                  }
-                />
-                Explicit mainnet confirmation
-              </label>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="preflight-subheading">Strategy review</h3>
-            <ReviewList title="Fills when" items={review.fillsWhen} />
-            <ReviewList title="Fails when" items={review.failsWhen} />
-            <ReviewList title="Assumptions" items={review.assumptions} />
-            <ReviewList title="Risks" items={review.risks} />
-            <ReviewList
-              title="Mainnet blockers"
-              items={review.mainnetBlockers}
-            />
-          </section>
-        </div>
-      </details>
+          </details>
+        </>
+      )}
     </div>
   );
 }

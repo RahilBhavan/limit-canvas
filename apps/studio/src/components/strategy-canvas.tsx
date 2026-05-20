@@ -186,12 +186,12 @@ function StrategyCanvasInner({
           }
         }}
       >
-        <Background color="#212327" gap={GRID_SNAP} size={1} />
+        <Background color="#27272a" gap={GRID_SNAP} size={1} />
         <Controls showInteractive={false} />
         <MiniMap
           className="strategy-minimap"
-          nodeColor={() => "#5a5d66"}
-          maskColor="rgba(10, 10, 10, 0.72)"
+          nodeColor={() => "#86868b"}
+          maskColor="rgba(0, 0, 0, 0.6)"
           pannable
           zoomable
         />
@@ -204,19 +204,38 @@ function StrategyCanvasInner({
 }
 
 function StrategyNodeView({ data }: NodeProps<StrategyNode>) {
+  const isPreviewOnly =
+    data.templateId === "twap-slice" || data.templateId === "dca-schedule";
+
   return (
-    <div className={`strategy-node ${data.status}`}>
+    <div
+      className={`strategy-node ${data.status} ${isPreviewOnly ? "preview-only" : ""}`}
+    >
       <Handle type="target" position={Position.Left} />
-      <div className="node-eyebrow">{data.eyebrow}</div>
+      <div className="node-eyebrow">
+        {data.eyebrow} {isPreviewOnly && "· Preview Only"}
+      </div>
       <div className="node-title-row">
         <div className="node-title">{data.title}</div>
-        <span className={`node-badge ${data.status}`}>
-          {data.status === "ready" ? "ok" : data.status}
+        <span
+          className={`node-badge ${isPreviewOnly ? "preview" : data.status}`}
+        >
+          {isPreviewOnly
+            ? "preview"
+            : data.status === "ready"
+              ? "ok"
+              : data.status}
         </span>
       </div>
       <div className="node-detail">{data.detail}</div>
-      {data.issues.length > 0 && (
-        <div className="node-issue">{data.issues[0]}</div>
+      {isPreviewOnly ? (
+        <div className="node-preview-warning">
+          Planning only — no codegen support yet
+        </div>
+      ) : (
+        data.issues.length > 0 && (
+          <div className="node-issue">{data.issues[0]}</div>
+        )
       )}
       <Handle type="source" position={Position.Right} />
     </div>
@@ -232,15 +251,15 @@ function buildGraph(
   const strategyDetail = describeStrategy(doc);
   const warningStatus = warnings.length > 0 ? "warn" : "ready";
   const protocolIssues = warnings.length > 0 ? warnings : [];
-  const conditionX = 250;
-  const extensionX = 520;
-  const proofX = addons.gasGuard.enabled ? 520 : 250;
-  const proofY = addons.gasGuard.enabled ? 330 : 285;
+  const conditionX = 280;
+  const extensionX = 580;
+  const proofX = addons.gasGuard.enabled ? 580 : 280;
+  const proofY = addons.gasGuard.enabled ? 340 : 280;
   const nodes: StrategyNode[] = [
     {
       id: "order",
       type: "strategy",
-      position: { x: 0, y: 145 },
+      position: { x: 0, y: 160 },
       data: {
         eyebrow: "Order",
         title: "Maker intent",
@@ -253,7 +272,7 @@ function buildGraph(
     {
       id: "condition",
       type: "strategy",
-      position: { x: conditionX, y: 52 },
+      position: { x: conditionX, y: 40 },
       data: {
         eyebrow: BLOCK_LABELS[doc.templateId],
         title: titleFor(doc.templateId),
@@ -269,7 +288,7 @@ function buildGraph(
           {
             id: "gas-guard-addon",
             type: "strategy" as const,
-            position: { x: conditionX, y: 238 },
+            position: { x: conditionX, y: 280 },
             data: {
               eyebrow: "Gas predicate",
               title: "Gas guard",
@@ -285,7 +304,7 @@ function buildGraph(
     {
       id: "extension",
       type: "strategy",
-      position: { x: extensionX, y: 145 },
+      position: { x: extensionX, y: 160 },
       data: {
         eyebrow: "LOP extension",
         title: "Packed calldata",
@@ -394,8 +413,21 @@ function edge(source: string, target: string, label: string): Edge {
     label,
     animated: true,
     className: "logic-edge",
-    style: { stroke: "rgba(255, 255, 255, 0.42)", strokeWidth: 1.5 },
-    labelStyle: { fill: "#dadbdf", fontSize: 10, fontWeight: 400 },
+    style: { stroke: "rgba(255, 255, 255, 0.35)", strokeWidth: 1.5 },
+    labelStyle: {
+      fill: "var(--ink)",
+      fontSize: 10,
+      fontWeight: 500,
+      fontFamily: "var(--font-mono), monospace",
+    },
+    labelBgStyle: {
+      fill: "var(--canvas-elev)",
+      stroke: "var(--hairline-strong)",
+      strokeWidth: 1,
+      fillOpacity: 1,
+    },
+    labelBgPadding: [6, 4],
+    labelBgBorderRadius: 4,
   };
 }
 

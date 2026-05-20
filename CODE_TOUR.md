@@ -38,14 +38,14 @@ Two functions worth reading:
 - `packPredicateOnlyExtension(predicateCalldata)` — emits the 32-byte header + predicate bytes blob.
 - `buildSaltWithExtension(rawSalt, extension)` — clears the low 160 bits of the salt and ORs in the low 160 bits of `keccak256(extension)`.
 
-Companion test `extension.test.ts` asserts the invariant directly. The Solidity side of the salt rule lives in `packages/contracts/test/utils/LopOrderTestLib.sol::saltFromExtension`. They have to agree byte-for-byte or fills don't happen.
+Companion test `extension.test.ts` asserts the invariant directly. The Solidity side of the salt rule lives in `packages/contracts/test/helpers/LopOrderTestLib.sol::saltFromExtension`. They have to agree byte-for-byte or fills don't happen.
 
 ### 3. How predicates are composed → `packages/lop-sdk/src/predicates.ts`
 
 `buildAndPredicate(predicates: bytes[])` produces calldata that decodes to LOP's own `PredicateHelper.and(uint256 offsets, bytes data)`:
 end-offsets packed in 32-bit chunks of `offsets`, predicate bodies concatenated in `data`. This is the same shape LOP uses internally, which is why the integration test's decode round-trip works.
 
-The gas-safe stop-loss demo is `AND(stop-loss, gas-guard)` compiled through this function.
+The gas-safe stop-loss demo is `AND(stop-loss, gas-guard)` compiled through this function. The same file also exports `buildOrPredicate` / `buildNotPredicate` and the `buildCompareGt` / `buildCompareLt` comparators, so the composable set is `single | and | or | not`.
 
 ### 4. The pipeline → `packages/codegen/src/generate.ts`
 
@@ -106,7 +106,7 @@ The visual canvas itself is `strategy-canvas.tsx` (React Flow). Each node repres
 | **Predicate** | A view-function call LOP makes via `arbitraryStaticCall` to decide if an order is fillable now |
 | **Extension** | 32-byte header + predicate calldata, attached to an order via taker traits |
 | **Extension hash** | `keccak256(extension)` — its low 160 bits must equal the order salt's low 160 bits |
-| **Maturity** | `draft` / `audited` / `mainnet-enabled` — only the last unlocks mainnet, and only with explicit confirmation |
+| **Maturity** | `draft` / `tested` / `benchmarked` / `audit-ready` / `mainnet-enabled` — `audit-ready`+ unlocks mainnet, and only with explicit confirmation |
 | **Readiness gate** | A UI check (LOP address, maturity, warnings, hashes, explicit confirm). All five must pass before mainnet. |
 | **Manifest** | Deterministic JSON fingerprinting the strategy (`dslHash`, `extensionHash`, `lop.version`, …) |
 | **Phase** | The wizard's 3-stage flow: **Build → Test → Ship** |

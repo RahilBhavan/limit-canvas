@@ -15,6 +15,7 @@
     "ignore": [
       "node_modules",
       ".next",
+      ".claude",
       "**/dist",
       "packages/contracts/out",
       "packages/contracts/cache",

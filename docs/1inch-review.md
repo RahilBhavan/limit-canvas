@@ -12,7 +12,7 @@ A small, surprisingly disciplined toolchain for composing LOP v4.3.2 extensions.
 
 I'd be comfortable pointing a partner engineering team at this as a **reference implementation** for LOP extension composition. I would not yet be comfortable telling them "deploy what this generates to mainnet" — and the project explicitly agrees, gating mainnet behind `audited: true` plus bytecode review.
 
-**Update since first review:** all four P0 release-blockers *and* the five P1 production-gap items below have been closed. All four templates (stop-loss, gas-guard, TWAP, DCA) are now first-class on the codegen path; the oracle is hardened; the bytecode hash is a real compiled hash; audit provenance is structured; `OR`/`NOT` predicate primitives and first-class maker traits have landed. The remaining open items (L4–L11) are deliberate scope boundaries — orderbook submission, multichain integration coverage — not foundational work.
+**Update since first review:** all four P0 release-blockers *and* the five P1 production-gap items below have been closed. All four templates (stop-loss, gas-guard, TWAP, DCA) are now first-class on the codegen path; the oracle is hardened; the bytecode hash is a real compiled hash; audit provenance is structured; `OR`/`NOT` predicate primitives and first-class maker traits have landed. The remaining open items (L5 and L10) are deliberate scope boundaries — orderbook submission, multichain integration coverage — not foundational work.
 
 ---
 
@@ -114,9 +114,9 @@ The project now includes a comprehensive fill-path benchmark test `packages/cont
 
 The chain registry covers ten chains, but the LOP integration test, the demo flow, and the deploy scripts assume an EVM-mainnet-shape environment. zkSync-Era has a different LOP address and historically different gas semantics; if we want this to be a credible multichain reference, at least one non-mainnet-EVM integration test would help.
 
-### L11 — Persisted state is unversioned across schema changes
+### L11 — Persisted state validates against the DSL schema (Resolved)
 
-`packages/studio/src/lib/persisted-strategy.ts` uses `version: 1` and bails on mismatch, but if the DSL schema evolves the wizard will silently fall back to the default. For a tool that pitches reproducibility, the on-disk strategy should round-trip across DSL versions or fail loudly with a migration path.
+`apps/studio/src/lib/persisted-strategy.ts` now stamps the saved blob with the `DSL_VERSION` it was written under and, on load, re-parses the persisted `doc` through `strategyDocumentSchema.safeParse`. A DSL schema change (version bump, new required field, tighter refinement) is therefore detected rather than silently feeding a stale document into the wizard. `loadPersistedState` returns a discriminated `empty | ok | incompatible` result; on `incompatible` the wizard clears the stale blob and surfaces a dismissible notice naming the saved DSL version, instead of failing silently.
 
 ### L12 — Zip bundle export (Resolved)
 
@@ -258,4 +258,4 @@ If those five steps land, the project is what it claims. If any of them fail, th
 
 If I had to put this in one sentence to a 1inch product lead: *"It does the unsexy parts right (pinning, packing, salt, address registry, integration test) and stops short where it should (mainnet, orderbook submission, audit claim). The remaining work is well-scoped, not foundational."*
 
-The constructive way forward was the P0 list — oracle hardening, real bytecode hash, audit provenance, fill-path benchmark — followed by the P1 list: promoting TWAP/DCA to first-class, maker traits as DSL, keeper docs, `OR`/`NOT` primitives, zip export. **All of that is now done.** What remains (L4–L11) is genuine scope — orderbook submission, multichain integration coverage, persisted-state versioning — not foundational work. This is a tool I'd point a partner at unprompted.
+The constructive way forward was the P0 list — oracle hardening, real bytecode hash, audit provenance, fill-path benchmark — followed by the P1 list: promoting TWAP/DCA to first-class, maker traits as DSL, keeper docs, `OR`/`NOT` primitives, zip export. **All of that is now done.** What remains is genuine scope — orderbook submission (L5) and multichain integration coverage (L10) — not foundational work. This is a tool I'd point a partner at unprompted.

@@ -83,7 +83,7 @@ limit-canvas/
 **Active tasks:** Onboarding overlay clarity; `CODE_TOUR.md` surfacing the load-bearing files; README hook + diagram.
 **Release-blocker P0 status:** all four closed — oracle hardening, real bytecode hash, audit-provenance schema, fill-path benchmark.
 **P1 production-gap status:** all five closed — maker traits as first-class DSL, keeper docs in generated README, TWAP/DCA on the codegen path, zip bundle export, `OR`/`NOT` predicate primitives.
-**Remaining (deliberate scope, see L4–L11 in `docs/1inch-review.md`):** orderbook submission pipeline, multichain integration coverage, persisted-state versioning.
+**Remaining (deliberate scope, see L5 and L10 in `docs/1inch-review.md`):** orderbook submission pipeline, multichain integration coverage.
 
 ---
 

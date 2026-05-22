@@ -17,6 +17,7 @@ import { TemplateGallery } from "@/components/template-gallery";
 import type { UiMode } from "@/lib/composer-types";
 import { defaultDocument } from "@/lib/default-dsl";
 import {
+  clearPersistedState,
   loadPersistedState,
   savePersistedState,
 } from "@/lib/persisted-strategy";
@@ -39,7 +40,11 @@ import {
 import { TEMPLATES, isGraphCodegenTemplate } from "@/lib/templates";
 import { connectMakerAddress } from "@/lib/wallet";
 import { generateArtifacts } from "@limit-canvas/codegen";
-import type { StrategyDocument, TemplateId } from "@limit-canvas/hook-dsl";
+import {
+  DSL_VERSION,
+  type StrategyDocument,
+  type TemplateId,
+} from "@limit-canvas/hook-dsl";
 import { strToU8, zipSync } from "fflate";
 import {
   type ReactNode,
@@ -106,6 +111,7 @@ export function ComposeWizard({
     { path: string; content: string }[]
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const [proof, setProof] = useState<ProofStatus>(EMPTY_PROOF);
   const [reviewed, setReviewed] = useState({
     extensionHash: false,
@@ -187,8 +193,9 @@ export function ComposeWizard({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot hydrate from localStorage
   useEffect(() => {
-    const saved = loadPersistedState();
-    if (saved) {
+    const result = loadPersistedState();
+    if (result.status === "ok") {
+      const saved = result.state;
       setDoc(saved.doc);
       setAddons(saved.addons);
       setSimulationInput(saved.simulationInput);
@@ -196,6 +203,14 @@ export function ComposeWizard({
       setPhase(initialPhase ?? phaseFromLegacyStep(saved.workflowStep));
       setUiMode(saved.uiMode ?? "simple");
     } else {
+      if (result.status === "incompatible") {
+        clearPersistedState();
+        setStaleNotice(
+          result.savedDslVersion
+            ? `A saved strategy from DSL ${result.savedDslVersion} could not be loaded under the current DSL ${DSL_VERSION}. Starting from a fresh template.`
+            : `A previously saved strategy was incompatible with the current DSL ${DSL_VERSION}. Starting from a fresh template.`,
+        );
+      }
       syncDoc(defaultDocument(templateId));
       setOnboardingOpen(true);
     }
@@ -205,7 +220,6 @@ export function ComposeWizard({
   useEffect(() => {
     if (!hydrated) return;
     savePersistedState({
-      version: 1,
       doc,
       addons,
       simulationInput,
@@ -659,6 +673,19 @@ export function ComposeWizard({
         <div className="error-banner">
           <strong>{error.split(". ")[0]}</strong>
           <span>{error.split(". ").slice(1).join(". ")}</span>
+        </div>
+      )}
+
+      {staleNotice && (
+        <div className="notice-banner" role="status">
+          <span>{staleNotice}</span>
+          <button
+            type="button"
+            className="ghost-button ghost-button--sm"
+            onClick={() => setStaleNotice(null)}
+          >
+            Dismiss
+          </button>
         </div>
       )}
     </div>

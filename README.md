@@ -148,7 +148,6 @@ are closed. The remaining limitations are deliberate scope boundaries, not unfin
 
 - **No Orderbook submission path.** The SDK produces the `POST /orderbook/v4.1` payload *shape*, but the studio never submits — auto-submitting signed orders is a much larger trust surface. A partner integrates their own submission pipeline.
 - **Single-chain integration coverage.** The chain registry covers 10 chains, but the LOP fill test and deploy scripts assume an EVM-mainnet-shape environment; zkSync-Era is not yet exercised by an integration test.
-- **Persisted studio state is unversioned across DSL changes.** `persisted-strategy.ts` falls back to the default on a schema mismatch rather than migrating saved strategies.
 
 ---
 

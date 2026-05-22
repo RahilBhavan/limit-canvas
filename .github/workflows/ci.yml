@@ -13,10 +13,13 @@ jobs:
         with:
           submodules: recursive
       - name: Verify LOP submodule pinned to 4.3.2
-        working-directory: packages/contracts/lib/limit-order-protocol
         run: |
-          tag=$(git describe --tags --exact-match HEAD)
-          test "$tag" = "4.3.2"
+          # 4.3.2 tag == commit 67c56aee… ; actions/checkout does not fetch
+          # submodule tags, so assert the pinned commit directly.
+          expected=67c56aee3b6a9f4982bf487084bd8da1f6638da0
+          actual=$(git -C packages/contracts/lib/limit-order-protocol rev-parse HEAD)
+          echo "LOP submodule at $actual (expected 4.3.2 = $expected)"
+          test "$actual" = "$expected"
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: Forge build & test

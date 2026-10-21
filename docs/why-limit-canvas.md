@@ -31,7 +31,7 @@ The portfolio hero flow is **gas-safe stop-loss**: oracle price condition **and*
 
 - Not an official 1inch product unless separately approved.
 - v1 does **not** submit orders to the Orderbook API (exports payload shape only).
-- TWAP/DCA are **simulate / preview** until full graph codegen and LOP fill tests land.
+- TWAP and DCA have full graph codegen and LOP fill tests, but the project ships no keeper. The generated bundle documents what a keeper must do.
 
 ## Links
 

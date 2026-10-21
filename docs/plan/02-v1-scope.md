@@ -16,7 +16,7 @@
 
 ## Out of scope (v1)
 
-- Full graph-to-codegen for TWAP/DCA combined getters (preview/simulate only in studio)
+- Full graph-to-codegen for TWAP/DCA combined getters (preview/simulate only in studio). Since delivered: both templates now generate through codegen and fill in `LopFillIntegration.t.sol`.
 - On-chain DCA/TWAP scheduler (keeper docs only)
 - Certora / formal verification (v2)
 - Production audit of generated code (templates marked `audited` for mainnet allowlist)

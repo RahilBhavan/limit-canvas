@@ -1,6 +1,6 @@
 # `packages/contracts` (Foundry harness)
 
-The **Solidity side** of the project. Pins the 1inch Limit Order Protocol at tag `4.3.2`, ships four strategy template contracts, two naive-baseline contracts, three mock dependencies, and a five-tier test suite (unit, fuzz, integration, benchmark, deploy script smoke tests).
+The **Solidity side** of the project. Pins the 1inch Limit Order Protocol at tag `4.3.2`, ships four strategy template contracts, two naive-baseline contracts, three mock dependencies, and a four-tier test suite (unit, fuzz, integration, benchmark) of 34 tests.
 
 Run `forge test -vvv` here and you have the strongest available evidence that everything the studio promises about a generated bundle is also true at the protocol level.
 
@@ -113,7 +113,7 @@ contract TwapSliceGetter {
 
 Implements LOP's `IAmountGetter`-shaped `getMakingAmount(requested, remaining, orderHash)`. Caps per-fill amount by `(elapsedSlices * sliceAmount)`. Constructor args: total, slice, interval, startTime — must be supplied when deploying.
 
-> **Not yet wired through `fillOrderArgs` in an integration test.** Unit-tested in isolation; the LOP fill round-trip is P1 (see [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap)).
+> **Filled through `fillOrderArgs`** in `LopFillIntegration.t.sol` (`test_fillOrderArgs_twap_slice_getter_succeeds` and `..._reverts_above_cap`). See P1 in the [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap-resolved).
 
 ### `DcaSeriesRegistry`
 
@@ -161,14 +161,14 @@ Property tests. Currently only one:
 
 - `GasGuardFuzzTest::testFuzz_isAllowed(uint64 maxGwei)` — bounded fuzz over base-fee caps; asserts the strategy's verdict matches `block.basefee <= maxBaseFee` for the test-fixed `vm.fee`.
 
-Expanding fuzz coverage to stop-loss (oracle price range), TWAP (timestamps + remainingMaking), and DCA (tranche index) is part of promoting those templates from `tested`/`benchmarked` to `audit-ready`.
+Stop-loss (oracle price range), TWAP (timestamps and remainingMaking) and DCA (tranche index) have no fuzz tests yet, although all four templates carry the catalog label `audit-ready`.
 
 ### Integration (`test/integration/`)
 
 Cross-contract tests that touch real LOP `4.3.2` contracts.
 
 - `LopIntegration.t.sol` — submodule smoke test. Deploys `LimitOrderProtocol` and `PredicateHelper`, asserts non-zero addresses. If this passes, the submodule and imports resolve.
-- `LopFillIntegration.t.sol` — **the load-bearing test.** Deploys LOP, deploys `GasGuardStrategy`, builds the extension with the same packing rules the SDK uses, computes the salt via the salt-low-160 invariant, signs the order as the maker, and calls `lop.fillOrderArgs(...)` as the taker. Three positive cases (low base fee, predicate pass, balance deltas correct) and two negative cases (high base fee reverts, `checkPredicate` view path).
+- `LopFillIntegration.t.sol` — **the load-bearing test.** Deploys LOP, deploys `GasGuardStrategy`, builds the extension with the same packing rules the SDK uses, computes the salt via the salt-low-160 invariant, signs the order as the maker, and calls `lop.fillOrderArgs(...)` as the taker. Ten cases cover gas-guard (fill within the cap, revert above it, both `checkPredicate` paths), stop-loss (fill below the floor, revert on a stale oracle or a decimals mismatch), the TWAP getter (fill within the slice cap, revert above it) and DCA series registration.
 
 This file is what proves the studio's promised extension format actually fills.
 
@@ -307,10 +307,16 @@ forge test -vvv --match-path "test/integration/LopFillIntegration*"
 Expected output:
 
 ```
-[PASS] test_fillOrderArgs_gas_guard_succeeds_when_basefee_within_cap
-[PASS] test_fillOrderArgs_gas_guard_reverts_when_basefee_exceeds_cap
-[PASS] test_checkPredicate_passes_within_gas_cap
-[PASS] test_checkPredicate_fails_above_gas_cap
+[PASS] test_checkPredicate_fails_above_gas_cap()
+[PASS] test_checkPredicate_passes_within_gas_cap()
+[PASS] test_fillOrderArgs_gas_guard_reverts_when_basefee_exceeds_cap()
+[PASS] test_fillOrderArgs_gas_guard_succeeds_when_basefee_within_cap()
+[PASS] test_fillOrderArgs_stop_loss_floor_fills_when_price_below_threshold()
+[PASS] test_fillOrderArgs_stop_loss_reverts_when_decimals_mismatch()
+[PASS] test_fillOrderArgs_stop_loss_reverts_when_oracle_is_stale()
+[PASS] test_fillOrderArgs_twap_slice_getter_reverts_above_cap()
+[PASS] test_fillOrderArgs_twap_slice_getter_succeeds()
+[PASS] test_registerDcaSeries_succeeds()
 ```
 
 If any of these fail, the studio's promised extension format does not produce a fillable order on LOP `4.3.2`.

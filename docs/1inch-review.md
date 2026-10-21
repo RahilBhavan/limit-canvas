@@ -1,5 +1,7 @@
 # Limit Canvas — Internal Review
 
+> **What this is:** a self-review that the author wrote from the point of view of a 1inch LOP engineer, to find gaps before release. No one at 1inch wrote, reviewed or endorsed it. "Our protocol" below means LOP as that imagined reviewer would say it.
+
 *Reviewer perspective: 1inch LOP team engineer*
 *Reviewed: Limit Canvas v0.1 against LOP v4.3.2*
 *Scope: protocol correctness, production readiness, integration risk, partner-fit*

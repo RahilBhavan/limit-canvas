@@ -56,7 +56,7 @@ apps/studio/
 │   │   ├── strategy-canvas.tsx           ← React Flow canvas + drop zones + node renderer
 │   │   ├── preflight-panel.tsx           ← Right-side readiness column
 │   │   ├── simulation-panel.tsx          ← Outcome card + scenario presets + timeline
-│   │   ├── template-gallery.tsx          ← 4 template cards (Ready / Preview badges)
+│   │   ├── template-gallery.tsx          ← 4 template cards (all Ready)
 │   │   ├── export-panel.tsx              ← Ship phase: download .txt bundle + manifest.json
 │   │   ├── deploy-step-panel.tsx         ← Ship phase: forge script CLI handoff
 │   │   ├── onboarding-overlay.tsx        ← First-load modal with Run-demo CTA
@@ -162,7 +162,7 @@ interface PersistedComposerState {
 }
 ```
 
-On hydrate, legacy `workflowStep` values are mapped to a `Phase` via `phaseFromLegacyStep`. Schema mismatch returns `null` and resets to defaults — a known gap, see [L11](../1inch-review.md#l11--persisted-state-is-unversioned-across-schema-changes).
+On hydrate, legacy `workflowStep` values are mapped to a `Phase` via `phaseFromLegacyStep`. The saved document is validated against the current DSL schema. On a mismatch, hydrate returns `status: "incompatible"` instead of loading a stale document. See [L11](../1inch-review.md#l11--persisted-state-validates-against-the-dsl-schema-resolved).
 
 ---
 
@@ -223,7 +223,7 @@ The simulation here is **client-only** and does not call any contract. It mirror
 
 ## Design system (`globals.css`)
 
-A hand-authored, single-accent dark-lab system. ~2,300 lines, organised top-to-bottom:
+A hand-authored, single-accent dark-lab system. about 2,680 lines, organised top-to-bottom:
 
 ```
 1.  Design tokens (CSS custom properties)
@@ -286,7 +286,7 @@ The UI is intentionally upfront about this:
 
 The assist panel itself was simplified out of the main wizard during the redesign — the API route remains for future re-introduction.
 
-> See [the 1inch review L7 (predicate composition)](../1inch-review.md#l7--predicate-composition-is-and-only) and the dropped-in-redesign note: this is a UX surface, not a load-bearing one.
+> See [the 1inch review L7 (predicate composition)](../1inch-review.md#l7--predicate-composition-primitives-resolved) and the dropped-in-redesign note: this is a UX surface, not a load-bearing one.
 
 ---
 

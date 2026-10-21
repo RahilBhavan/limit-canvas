@@ -18,7 +18,7 @@ Limit Canvas generates **template instances** from a typed DSL. It is not a gene
 
 - Generated contracts are **not** audited unless a template is explicitly marked `mainnet-enabled` with an internal review process.
 - Simulation in the UI is **logical replay**, not an on-chain `simulate` call unless you run Foundry tests locally/CI.
-- TWAP/DCA templates may be preview-only; do not treat them as production-ready without reading template maturity in the catalog.
+- `audit-ready` is this project's own catalog label, not an external audit. Read the template maturity in the catalog before you treat any template as production-ready.
 
 ## Reporting
 

@@ -2,7 +2,7 @@
 
 The **DSL-to-artifacts compiler**. Takes a validated `StrategyDocument` and produces a reproducible bundle: Solidity strategy contract, deploy script stub, test stub, `extensions.json` (extension + hash + salt + orderbook shape), `README.generated.md`, and `manifest.json` with a determinism fingerprint.
 
-The package is small (~280 lines of TypeScript) and intentionally not extensible by user input — every template renderer is a fixed string template with typed substitutions. Generated Solidity is never user-authored.
+The package is small (about 770 lines of non-test TypeScript in `src/`) and intentionally not extensible by user input — every template renderer is a fixed string template with typed substitutions. Generated Solidity is never user-authored.
 
 ---
 
@@ -57,7 +57,8 @@ The CLI (`packages/codegen/src/cli.ts`) is a thin Bun script that reads a DSL JS
    │ 2. Build predicate calldata (lop-sdk)                        │
    │    stop-loss / gas-guard: buildStopLossPredicate /            │
    │                            buildGasGuardPredicate             │
-   │    twap-slice / dca-schedule: no predicate (preview-only)     │
+   │    twap-slice: amount-getter segments (packExtension)         │
+   │    dca-schedule: no predicate (series registry)               │
    └──────────────────────────────────────────────────────────────┘
         │
         ▼
@@ -249,7 +250,7 @@ contract TwapSliceGetter {
 }
 ```
 
-Implements LOP's `IAmountGetter`-shaped `getMakingAmount` signature. **Not wired through the codegen predicate tree** in v1 — TWAP is preview-only on the artifact side (`graphCodegenExecutable: false` in the catalog).
+Implements LOP's `IAmountGetter`-shaped `getMakingAmount` signature. Codegen packs it into the extension's making-amount and taking-amount segments with `packExtension` (`graphCodegenExecutable: true` in the catalog).
 
 ### `DcaSeriesRegistry`
 
@@ -272,13 +273,13 @@ Pure metadata. Actual DCA fills come from off-chain order publication (the wizar
 | # | Invariant | Where |
 |---|---|---|
 | 1 | Same `StrategyDocument` ⟹ byte-identical artifacts | `stableStringify` + deterministic predicate builders; asserted in `examples.test.ts` |
-| 2 | `manifest.extensionHash === computeExtensionHash(extensions.json:extension)` | `generate.ts:131` |
-| 3 | `manifest.lop.version === "4.3.2"` always (must match the Foundry submodule) | `generate.ts:204` (hard-coded) |
-| 4 | `manifest.compiler.solidity === "0.8.23"` always (must match `foundry.toml`) | `generate.ts:200` (hard-coded) |
-| 5 | `manifest.generatedFiles` lists every artifact including `manifest.json` itself | `generate.ts:207-211` |
-| 6 | `predicateTree.mode === "single"` for non-graph or gas-guard-only templates | `generate.ts:231-251` |
-| 7 | `predicateTree.mode === "and"` exactly when a `stop-loss` base has a `gas-guard` node in `doc.graph.nodes` | `generate.ts:251-272` |
-| 8 | DCA tranches in `dca-orders.json` count equals `block.tranches` | `generate.ts:175-187` |
+| 2 | `manifest.extensionHash === computeExtensionHash(extensions.json:extension)` | `generate.ts:149` |
+| 3 | `manifest.lop.version === "4.3.2"` always (must match the Foundry submodule) | `generate.ts:240` (hard-coded) |
+| 4 | `manifest.compiler.solidity === "0.8.23"` always (must match `foundry.toml`) | `generate.ts:237` (hard-coded) |
+| 5 | `manifest.generatedFiles` lists every artifact including `manifest.json` itself | `generate.ts:244` |
+| 6 | `predicateTree.mode === "single"` for non-graph or gas-guard-only templates | `compilePredicateTree` (`generate.ts:275`) |
+| 7 | `predicateTree.mode === "and"` exactly when a `stop-loss` base has a `gas-guard` node in `doc.graph.nodes` | `compilePredicateTree` (`generate.ts:275`) |
+| 8 | DCA tranches in `dca-orders.json` count equals `block.tranches` | `generate.ts:211-222` |
 
 ---
 
@@ -304,8 +305,8 @@ for (const artifact of artifacts) {
 
 ```bash
 bun run packages/codegen/src/cli.ts \
-  docs/examples/gas-safe-stop-loss.dsl.json \
-  ./artifacts/gas-safe-stop-loss
+  examples/stop-loss.json \
+  ./artifacts/stop-loss
 ```
 
 The CLI refuses to write when `FOUNDRY_PROFILE=mainnet` is set and `doc.audited !== true`:
@@ -350,20 +351,14 @@ bun test packages/codegen
 This touches every package; see the "Extending" section of [`hook-dsl`](./hook-dsl.md#add-a-new-template). In `codegen` specifically:
 
 1. Add a `generate{NewTemplate}Strategy` function in `templates.ts`.
-2. Add a case in `generateArtifacts`' switch (`generate.ts:88`).
+2. Add a case in `generateArtifacts`' switch (`generate.ts:99`).
 3. Decide whether the new template participates in `compilePredicateTree`'s `"and"` composition. If yes, add it to the gas-guard composition branch.
 4. Update `riskNotes` and the manifest's expected catalog entry.
 5. Add an `examples.test.ts` snapshot.
 
-### Promote TWAP/DCA to full graph codegen
+### TWAP and DCA graph codegen (done)
 
-This is the P1 unblocker listed in the [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap). Required changes in this package:
-
-1. Model `IAmountGetter` segments in extension packing (`lop-sdk` work).
-2. Extend `CompiledPredicateTree` (or a sibling `CompiledExtensionTree`) to include getter segments alongside predicates.
-3. Update `compilePredicateTree` so TWAP composes with `gas-guard` correctly.
-4. Update `TEMPLATE_CATALOG`'s `graphCodegenExecutable` to `true` for TWAP/DCA.
-5. Add a LOP fill integration test that fills a TWAP slice through `fillOrderArgs`.
+This was the P1 item in the [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap-resolved). Both templates now have `graphCodegenExecutable: true`. TWAP packs its getter into the extension's amount segments, and `LopFillIntegration.t.sol` fills a TWAP slice through `fillOrderArgs`. DCA emits `dca-orders.json` and registers the series on-chain.
 
 ---
 
@@ -372,8 +367,8 @@ This is the P1 unblocker listed in the [1inch review](../1inch-review.md#p1--clo
 - **`STRATEGY_PLACEHOLDER` (`0x000...001`) is baked into emitted predicate calldata.** The deploy script's job is to substitute the real strategy contract address before signing. The wizard makes this visible; an external integrator needs to know this or fills will revert (the call would go to the placeholder address).
 - **`extensions.json` includes a salt computed with `saltHigh96 = 1n`.** This is a documentation placeholder, not a usable salt for a production maker. Real makers should compute their own `saltHigh96` (nonce, random, deterministic-per-order — pick a discipline) and recompute the salt with `buildSaltWithExtension`.
 - **Template `t.sol` file is a placeholder.** `generateTestStub` emits a trivial `assert(true)` test. Real test coverage lives in `packages/contracts/test/`, not in the generated bundle. If you ship the bundle to a partner, they should treat the included `*.t.sol` as a scaffold, not a test suite.
-- **Determinism depends on `stableStringify`.** Locally defined in `generate.ts:275`. It sorts object keys recursively. If you replace it with `JSON.stringify`, you lose determinism whenever V8 changes its key-iteration order across versions.
-- **`bytecodeHash` is `null`.** Until P0 lands, the readiness panel's "Bytecode hash reviewed" checkbox is a UX placeholder, not a real hash review.
+- **Determinism depends on `stableStringify`.** Locally defined in `generate.ts:319`. It sorts object keys recursively. If you replace it with `JSON.stringify`, you lose determinism whenever V8 changes its key-iteration order across versions.
+- **`bytecodeHash` comes from `bytecode-hashes.json`.** `bun run snapshot-bytecode` refreshes it from compiled `deployedBytecode`, and CI fails if the committed file drifts. A template with no entry gets `null`.
 
 ---
 

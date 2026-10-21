@@ -93,7 +93,9 @@ This SDK's `buildSaltWithExtension` enforces the rule on the producer side: `(sa
 packages/lop-sdk/src/
 ├── index.ts          ← public re-exports
 ├── extension.ts      ← packPredicateOnlyExtension, computeExtensionHash, buildSaltWithExtension
-├── predicates.ts     ← arbitraryStaticCall wrappers, AND combinator, GT/LT comparators
+├── predicates.ts     ← arbitraryStaticCall wrappers, AND / OR / NOT combinators, GT/LT comparators
+├── maker-traits.ts   ← packMakerTraits: maker-traits bitfield from the DSL order
+├── oracle-registry.ts ← curated Chainlink oracle allowlist (lookupOracle)
 ├── registry.ts       ← LOP_REGISTRY for 10 chains
 ├── orderbook.ts      ← buildOrderbookPayloadShape (no submission)
 └── extension.test.ts ← unit + property-style tests
@@ -134,7 +136,7 @@ Predicate-only extension layout (this SDK):
 
 The integration helper (`LopOrderTestLib.buildPredicateExtension`) uses a slightly different *Solidity-side* encoding (`offsets` placed at bit 128 of a `bytes32` header, predicate appended unpadded). Both encodings hash to a value the LOP contract will accept for the salt-low-160 check — the salt is computed over the chosen encoding, and the protocol only cares that the offsets decode correctly.
 
-> **If you change the header encoding, you must update both `extension.ts` and `LopOrderTestLib.sol`** and re-verify the integration test still fills. See [the 1inch-review L7](../1inch-review.md#l7--predicate-composition-is-and-only).
+> **If you change the header encoding, you must update both `extension.ts` and `LopOrderTestLib.sol`** and re-verify the integration test still fills. See [the 1inch-review L7](../1inch-review.md#l7--predicate-composition-primitives-resolved).
 
 ---
 
@@ -182,7 +184,7 @@ offsets layout (per LOP):
 
 The cursors are running totals of `bytes-so-far` after each predicate is concatenated into `data`. Verified against viem's ABI decoder in tests (`decoded.args[0] === 0x0000000600000004n` for two predicates of 4 and 2 bytes).
 
-> **Why not `OR` / `NOT` too?** Out of v1 scope. The flagship demo only needs AND-composition (`stop-loss AND gas-guard`). Adding OR/NOT is mechanical — same ABI shape, different selectors. See P1 in the [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap).
+> **`OR` and `NOT`.** `buildOrPredicate` and `buildNotPredicate` use the same ABI shape with the `or` and `not` selectors. Codegen emits only `and(...)` today, because the flagship demo is `stop-loss AND gas-guard`. See P1 in the [1inch review](../1inch-review.md#p1--closes-the-production-grade-gap-resolved).
 
 ---
 
@@ -327,11 +329,11 @@ Don't put any of this in production until each step lands.
 
 ## Gotchas
 
-- **`makerTraits` is hard-coded `"0"` in the orderbook shape.** The wizard surfaces `HAS_EXTENSION` via the readiness panel and integration tests set it explicitly via `LopOrderTestLib.defaultMakerTraits`, but `buildOrderbookPayloadShape` does not yet compute the maker-traits bitfield from the DSL. A downstream signer must set bit 249 themselves (and any other relevant flags: `ALLOW_PARTIAL_FILL`, `ALLOW_MULTIPLE_FILLS`, `USE_PERMIT2`, etc.). See [the 1inch review L8](../1inch-review.md#l8--maker-traits-are-partly-nominal).
+- **`makerTraits` comes from the DSL order.** `buildOrderbookPayloadShape` calls `packMakerTraits(doc.order, hasExtension)`, which sets `HAS_EXTENSION` (bit 249) when an extension exists, plus `NO_PARTIAL_FILLS`, `ALLOW_MULTIPLE_FILLS`, `USE_PERMIT2`, `UNWRAP_WETH`, private taker, expiration and nonce from the order fields. See [the 1inch review L8](../1inch-review.md#l8--maker-traits-as-first-class-dsl-resolved).
 - **`STRATEGY_PLACEHOLDER` in codegen.** The codegen builds predicate calldata against `0x000...001` because the real strategy address isn't known at codegen time (it's set at deploy). Downstream, the real address must be substituted into the predicate before the order is signed.
 - **Predicate-only**. This SDK does not (yet) pack maker-asset suffixes, amount getters, permits, or pre/post interactions. If a future template needs one of those, the extension layout has to expand and this SDK + the Solidity helpers + the integration test all change in lockstep.
 - **`saltHigh96` is user-chosen.** Pass a nonce or a deliberate random; do not reuse across orders for the same maker, or LOP will collide on order hashes.
-- **Predicate composition is AND-only.** Codegen currently only emits `and(...)` for two-template compositions. OR / NOT exist in this SDK as primitives (well, GT/LT do; OR/NOT don't) but aren't wired through codegen.
+- **Codegen emits only AND.** This SDK has `and`, `or` and `not` primitives, and the DSL accepts `or` and `not` modes, but codegen emits only `and(...)` for two-template compositions.
 
 ---
 

@@ -179,8 +179,8 @@ Current catalog (truncated):
 |---|---|---|---|---|
 | `stop-loss` | production-candidate | audit-ready | ✅ | ✅ |
 | `gas-guard` | production-candidate | audit-ready | ✅ | ✅ |
-| `twap-slice` | production-candidate | benchmarked | ✅ | ⛔ preview |
-| `dca-schedule` | production-candidate | tested | ✅ | ⛔ preview |
+| `twap-slice` | production-candidate | audit-ready | ✅ | ✅ |
+| `dca-schedule` | production-candidate | audit-ready | ✅ | ✅ |
 | `oracle-band` | planned | draft | ⛔ | ⛔ |
 | `deadline-window` | planned | draft | ⛔ | ⛔ |
 | `private-taker` | planned | draft | ⛔ | ⛔ |
@@ -313,7 +313,7 @@ Required when any schema change would invalidate an existing parsed document (re
 
 1. Update `DSL_VERSION` (e.g. `"1.1.0"`).
 2. Update the `version` literal in `strategyDocumentSchema`.
-3. Add a migration path in `apps/studio/src/lib/persisted-strategy.ts` (currently bails on mismatch — see [L11 in the 1inch review](../1inch-review.md#l11--persisted-state-is-unversioned-across-schema-changes)).
+3. Add a migration path in `apps/studio/src/lib/persisted-strategy.ts` (today an incompatible document is rejected, not migrated; see [L11 in the 1inch review](../1inch-review.md#l11--persisted-state-validates-against-the-dsl-schema-resolved)).
 4. Bump the manifest's `manifestVersion` if codegen output shape changes.
 
 ---

@@ -8,11 +8,11 @@ Per-package technical reference for Limit Canvas. Each doc is self-contained: AP
 
 | Package | Layer | Lines (src) | Doc |
 |---|---|---:|---|
-| `@limit-canvas/hook-dsl` | Schema / contract | ~200 | [hook-dsl.md](./hook-dsl.md) |
-| `@limit-canvas/lop-sdk` | Protocol correctness | ~250 | [lop-sdk.md](./lop-sdk.md) |
-| `@limit-canvas/codegen` | DSL → artifacts | ~500 | [codegen.md](./codegen.md) |
-| `packages/contracts` | Foundry harness (Solidity) | n/a | [contracts.md](./contracts.md) |
-| `apps/studio` | Next.js wizard | ~5,500 (TS + CSS) | [studio.md](./studio.md) |
+| `@limit-canvas/hook-dsl` | Schema / contract | ~490 | [hook-dsl.md](./hook-dsl.md) |
+| `@limit-canvas/lop-sdk` | Protocol correctness | ~450 | [lop-sdk.md](./lop-sdk.md) |
+| `@limit-canvas/codegen` | DSL → artifacts | ~770 | [codegen.md](./codegen.md) |
+| `packages/contracts` | Foundry harness (Solidity) | ~280 | [contracts.md](./contracts.md) |
+| `apps/studio` | Next.js wizard | ~8,100 (5,431 TS + 2,679 CSS) | [studio.md](./studio.md) |
 
 ---
 
@@ -139,8 +139,8 @@ cd apps/studio && bun run dev                   # http://localhost:3000
 
 # Generate artifacts from a DSL JSON
 bun run packages/codegen/src/cli.ts \
-  docs/examples/gas-safe-stop-loss.dsl.json \
-  ./artifacts/gas-safe-stop-loss
+  examples/stop-loss.json \
+  ./artifacts/stop-loss
 
 # Deploy to testnet (after wizard readiness passes)
 cd packages/contracts

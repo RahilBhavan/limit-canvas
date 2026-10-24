@@ -5,7 +5,7 @@ export function defaultDocument(templateId: TemplateId): StrategyDocument {
   const base = {
     version: "1.0.0" as const,
     name: `My ${templateId}`,
-    audited: templateId === "stop-loss" || templateId === "gas-guard",
+    audited: false,
     network: {
       chainId: 1,
       lopAddress: "0x111111125421ca6dc452d289314280a0f8842a65" as const,

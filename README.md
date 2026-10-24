@@ -44,7 +44,7 @@ A strategy moves through five workspace packages:
 
 ## Run it
 
-Prerequisites: [Bun](https://bun.sh) 1.x (tested with 1.4.0) and [Foundry](https://book.getfoundry.sh) (tested with forge 1.5.1). Clone with submodules so the pinned LOP, solidity-utils, OpenZeppelin and forge-std sources are present.
+Prerequisites: [Bun](https://bun.sh) 1.x (tested with 1.4.0) and [Foundry](https://book.getfoundry.sh) (pinned to **forge 1.5.1**, the version CI installs and `.gas-snapshot` was generated on). Gas numbers change between Foundry releases: forge 1.8.6 reads 237,841 for the fill benchmark against 208,825 on 1.5.1, so `forge snapshot --check` fails on other versions. Clone with submodules so the pinned LOP, solidity-utils, OpenZeppelin and forge-std sources are present.
 
 ```bash
 git clone --recurse-submodules https://github.com/RahilBhavan/limit-canvas.git
@@ -58,7 +58,8 @@ Run the tests:
 ```bash
 bun run test:packages   # 22 Bun tests across hook-dsl, lop-sdk and codegen
 bun run test:contracts  # 34 Foundry tests: 17 unit, 11 integration, 1 fuzz, 5 benchmark
-bun run bench           # gas report and snapshot for the benchmark tests
+bun run bench           # gas report; rewrites .gas-snapshot, so run it only on forge 1.5.1
+cd packages/contracts && forge snapshot --check --match-path "test/benchmark/*"  # compare with the committed snapshot
 ```
 
 On 2026-10-21 all 22 Bun tests and all 34 Foundry tests passed. `bun run test` runs both suites.

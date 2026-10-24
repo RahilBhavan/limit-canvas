@@ -10,8 +10,8 @@ import type { TemplateId } from "@limit-canvas/hook-dsl";
 const USE_CASE: Record<string, string> = {
   "stop-loss": "Limit sells / buys at an oracle price",
   "gas-guard": "Only fill when network gas is reasonable",
-  "twap-slice": "Slice large orders over time (preview)",
-  "dca-schedule": "Recurring tranches (preview)",
+  "twap-slice": "Slice large orders over time",
+  "dca-schedule": "Recurring tranches",
 };
 
 interface TemplateGalleryProps {
@@ -59,7 +59,7 @@ function TemplateCard({
       <span className="template-card-title">{template.title}</span>
       <small>{USE_CASE[template.id] ?? template.description}</small>
       <span className={`template-badge ${previewOnly ? "preview" : "ready"}`}>
-        {previewOnly ? "Preview" : "Ready"}
+        {previewOnly ? "Preview" : "Not audited"}
       </span>
     </button>
   );

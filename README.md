@@ -34,7 +34,7 @@ Oracle band, deadline window, private taker and Dutch auction appear in the cata
 
 A strategy moves through five workspace packages:
 
-1. `apps/studio` is a Next.js 15 app. You build the strategy on a canvas, replay fill conditions in a simulation panel, generate the bundle and run `forge test` from the **Verify** page.
+1. `apps/studio` is a Next.js 16 app. You build the strategy on a canvas, replay fill conditions in a simulation panel, generate the bundle and run `forge test` from the **Verify** page.
 2. `packages/hook-dsl` defines the `StrategyDocument` Zod schema and the template catalog.
 3. `packages/lop-sdk` packs extensions, derives the salt and holds the LOP address registry.
 4. `packages/codegen` turns a DSL document into Solidity, a deploy script, a generated README and `manifest.json` (DSL hash, extension hash, LOP pin, bytecode hash).
@@ -110,6 +110,8 @@ The studio and the tests need no credentials. To deploy or to turn on LLM assist
 - Integration tests cover one EVM-mainnet-shaped environment. The registry lists 10 chains, but no test exercises zkSync Era.
 - The studio simulation is a logical replay with synthetic inputs, not an on-chain `simulate` call. Proof comes from the Foundry tests.
 - The optional LLM assist calls OpenAI `gpt-4o-mini` only when `OPENAI_API_KEY` is set.
+- The LLM path was not run against OpenAI after the `ai` 7 upgrade (no key). It was checked only with the SDK's mock model. `generateObject` is deprecated in `ai` 7 in favour of `generateText` with an output setting.
+- `bun audit` reports 1 moderate advisory (`postcss-selector-parser`, through Tailwind) and none high, observed on 2026-10-25.
 
 ## License
 

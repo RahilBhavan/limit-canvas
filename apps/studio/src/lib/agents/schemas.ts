@@ -21,7 +21,7 @@ export const assistResponseSchema = z.object({
   headline: z.string(),
   bullets: z.array(z.string()),
   questions: z.array(z.string()).optional(),
-  dslPatch: z.record(z.unknown()).optional(),
+  dslPatch: z.record(z.string(), z.unknown()).optional(),
   confidence: z.enum(["high", "medium", "low"]),
   source: z.enum(["rules", "llm"]),
 });

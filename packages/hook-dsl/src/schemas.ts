@@ -79,7 +79,7 @@ export const strategyGraphNodeSchema = z.object({
   kind: z.enum(["order", "predicate", "getter", "extension", "proof"]),
   templateId: templateIdSchema.optional(),
   label: z.string().min(1),
-  params: z.record(z.unknown()).default({}),
+  params: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const strategyGraphEdgeSchema = z.object({

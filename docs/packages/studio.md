@@ -1,6 +1,6 @@
 # `apps/studio` (Next.js wizard)
 
-The **user-facing surface**. A Next.js 15 App Router app that lets a maker (or partner engineer) compose an LOP extension strategy through a 3-phase wizard, simulate fills, generate Solidity artifacts, run Foundry proof checks, and produce a testnet/mainnet deploy handoff.
+The **user-facing surface**. A Next.js 16 App Router app that lets a maker (or partner engineer) compose an LOP extension strategy through a 3-phase wizard, simulate fills, generate Solidity artifacts, run Foundry proof checks, and produce a testnet/mainnet deploy handoff.
 
 Everything in this app is a thin shell over the protocol-correctness layer in `@limit-canvas/lop-sdk`. If the wizard claims a strategy is "ready," the underlying claim comes from those packages — not from the UI.
 

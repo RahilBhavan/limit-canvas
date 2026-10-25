@@ -6,7 +6,7 @@
 ## Project
 
 **Name:** Limit Canvas
-**Stack:** TypeScript 5.x strict · Next.js 15 App Router · Foundry · Bun
+**Stack:** TypeScript 5.x strict · Next.js 16 App Router · Foundry · Bun
 **Architecture:** Bun monorepo for a visual/no-code 1inch Limit Order Protocol extension studio: Zod DSL, LOP extension SDK helpers, Solidity/test codegen, Foundry templates, and a Next.js wizard.
 **Deployment:** Studio target is Vercel or static-compatible Next hosting; generated contracts deploy through Foundry scripts to local, testnet, or gated mainnet profiles.
 **Status:** Active development toward production-grade MVP.
@@ -17,7 +17,7 @@
 
 **Language:** TypeScript 5.x strict, Solidity 0.8.23 in checked-in contracts  
 **Runtime:** Bun for workspace scripts, Foundry for Solidity  
-**Framework:** Next.js 15 App Router in `apps/studio`  
+**Framework:** Next.js 16 App Router in `apps/studio`  
 **Package manager:** Bun workspaces  
 **Database:** None in v1  
 **Styling:** Tailwind CSS in `apps/studio`  
@@ -131,7 +131,7 @@ If any task conflicts with these, flag it before proceeding.
 
 ## Learned Workspace Facts
 
-- Active product repo in this workspace is `limit-canvas/`: Bun monorepo with Next.js 15 studio at `apps/studio/`.
+- Active product repo in this workspace is `limit-canvas/`: Bun monorepo with Next.js 16 studio at `apps/studio/`.
 - Studio composer exposes three UI modes: Simple (default), Standard, and JSON/advanced.
 - All four templates (`stop-loss`, `gas-guard`, `twap-slice`, `dca-schedule`) are first-class on the codegen path at `audit-ready` maturity, each with unit + fuzz + integration + benchmark tests.
 - Human-friendly inputs live in `apps/studio/src/lib/human-units.ts` (USD price, gas presets); plain-language summaries in `apps/studio/src/lib/strategy-summary.ts`.

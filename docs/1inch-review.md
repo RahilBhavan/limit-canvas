@@ -28,7 +28,7 @@ A monorepo with five concerns kept properly separated:
 | `packages/lop-sdk` | Extension packing, predicate builders, salt/hash, LOP address registry, orderbook payload shape |
 | `packages/codegen` | DSL → Solidity strategy contract + deploy script + tests + manifest |
 | `packages/contracts` | Foundry harness pinned to LOP 4.3.2: templates, mocks, unit/fuzz/integration/benchmark tests |
-| `apps/studio` | Next.js 15 wizard: visual canvas, simulation, codegen trigger, proof status, export, deploy handoff |
+| `apps/studio` | Next.js 16 wizard: visual canvas, simulation, codegen trigger, proof status, export, deploy handoff |
 
 The wizard's flagship flow is **gas-safe stop-loss**: oracle price predicate AND'd with a base-fee predicate, compiled into a single LOP extension via `PredicateHelper.and`, with the order salt's low 160 bits constrained to equal the extension hash.
 
@@ -167,7 +167,7 @@ The rest of this document is intended to be readable by an engineer who has neve
 
 ```
    ┌─────────────────────────────────────────────────────────┐
-   │  apps/studio (Next.js 15 wizard)                        │
+   │  apps/studio (Next.js 16 wizard)                        │
    │  ┌──────────────┐  ┌────────────────┐  ┌────────────┐   │
    │  │ Strategy     │  │ Visual canvas  │  │ Preflight  │   │
    │  │ controls     │  │ (React Flow)   │  │ + readiness│   │

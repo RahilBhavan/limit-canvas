@@ -22,6 +22,10 @@ jobs:
           test "$actual" = "$expected"
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          # Gas numbers change between Foundry releases (forge 1.8.6 reads 237841 for the fill benchmark,
+          # 1.5.1 reads 208825), so .gas-snapshot is only valid on this version.
+          version: v1.5.1
       - name: Forge build & test
         working-directory: packages/contracts
         run: |
@@ -30,7 +34,6 @@ jobs:
       - name: Gas snapshot check
         working-directory: packages/contracts
         run: |
-          forge snapshot --match-path "test/benchmark/*"
           forge snapshot --check --match-path "test/benchmark/*"
       - uses: oven-sh/setup-bun@v2
       - name: Install workspace deps

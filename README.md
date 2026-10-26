@@ -64,7 +64,7 @@ cd packages/contracts && forge snapshot --check --match-path "test/benchmark/*" 
 
 On 2026-10-21 all 22 Bun tests and all 34 Foundry tests passed. `bun run test` runs both suites.
 
-Start the studio and open <http://localhost:3000>:
+Start the studio and open `http://localhost:3000`:
 
 ```bash
 bun run dev
